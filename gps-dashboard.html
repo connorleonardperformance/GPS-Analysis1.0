@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS Analytics — Elite S&C Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cy:#00d4ff;--cy2:#00b8e0;--cy-bg:#00d4ff12;--cy-bd:#00d4ff28;
+  --gn:#00e676;--gn-bg:#00e67612;--gn-bd:#00e67628;
+  --am:#ffab00;--am-bg:#ffab0012;--am-bd:#ffab0028;
+  --rd:#ff4757;--rd-bg:#ff475712;--rd-bd:#ff475728;
+  --pu:#b388ff;--pu-bg:#b388ff12;--pu-bd:#b388ff28;
+  --bl:#448aff;--bl-bg:#448aff12;--bl-bd:#448aff28;
+  --bg:#080c10;--bg2:#0e1318;--bg3:#131920;--bg4:#1a2028;--bg5:#1f2733;
+  --bd:#1e2830;--bd2:#243040;
+  --t:#e8f0fe;--t2:#8fa8c0;--t3:#4a6278;--t4:#2a3d50
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--t);font-size:13px;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:2px solid var(--cy);padding:0 18px;display:flex;align-items:stretch;justify-content:space-between;gap:0;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:9px;padding:10px 0}
+.logo-icon{width:30px;height:30px;background:var(--cy);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon i{color:#080c10;font-size:14px}
+.logo-t{font-size:14px;font-weight:500;color:#fff}
+.logo-s{font-size:9px;color:var(--cy);letter-spacing:1.5px;text-transform:uppercase;display:block;margin-top:1px}
+.nav{display:flex;align-items:stretch;flex-wrap:wrap}
+.ntab{display:flex;align-items:center;gap:6px;padding:0 14px;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:inherit;transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+.ntab i{font-size:14px}
+.ntab.active{color:var(--cy);border-bottom-color:var(--cy);background:#00d4ff08}
+.ntab:hover:not(.active){color:var(--t2);background:#ffffff05}
+.content{padding:14px 18px;max-width:1400px;margin:0 auto}
+.page{display:none}.page.active{display:block}
+.panel{background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:13px;margin-bottom:11px}
+.ph{font-size:10px;font-weight:500;color:var(--t3);letter-spacing:.9px;text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ph i{font-size:14px;color:var(--cy)}
+.ph-r{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:9px;margin-bottom:12px}
+.kpi{background:var(--bg3);border:1px solid var(--bd2);border-radius:9px;padding:11px 13px;position:relative;overflow:hidden}
+.ka{position:absolute;top:0;left:0;width:3px;height:100%}
+.kl{font-size:9px;color:var(--t3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px}
+.kv{font-size:20px;font-weight:500;color:#fff;line-height:1}
+.ks{font-size:10px;color:var(--t3);margin-top:3px}
+.pill{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;white-space:nowrap}
+.pc{background:var(--cy-bg);color:var(--cy);border:1px solid var(--cy-bd)}
+.pg{background:var(--gn-bg);color:var(--gn);border:1px solid var(--gn-bd)}
+.pa{background:var(--am-bg);color:var(--am);border:1px solid var(--am-bd)}
+.pr{background:var(--rd-bg);color:var(--rd);border:1px solid var(--rd-bd)}
+.pp{background:var(--pu-bg);color:var(--pu);border:1px solid var(--pu-bd)}
+.pgr{background:var(--bg4);color:var(--t3);border:1px solid var(--bd2)}
+.btn{background:var(--cy);color:#080c10;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;transition:background .15s}
+.btn:hover{background:var(--cy2)}
+.btn-g{background:transparent;color:var(--cy);border:1px solid var(--cy-bd);border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;transition:background .15s}
+.btn-g:hover{background:var(--cy-bg)}
+.fsel{background:var(--bg4);border:1px solid var(--bd2);border-radius:6px;padding:6px 9px;font-size:11px;color:var(--t2);outline:none;font-family:inherit}
+.fsel:focus{border-color:var(--cy)}
+.fi{background:var(--bg4);border:1px solid var(--bd2);border-radius:6px;padding:6px 9px;font-size:12px;color:var(--t);width:100%;outline:none;font-family:inherit}
+.fi:focus{border-color:var(--cy);color:#fff}
+.fi::placeholder{color:var(--t4)}
+.fl{font-size:9px;color:var(--t3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px}
+.fg{margin-bottom:8px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:9px;color:var(--cy);letter-spacing:.7px;text-transform:uppercase;padding:7px 9px;text-align:left;border-bottom:1px solid var(--bd2);background:var(--bg4);white-space:nowrap}
+.tbl td{padding:7px 9px;font-size:11px;color:var(--t2);border-bottom:1px solid var(--bd);vertical-align:middle;white-space:nowrap}
+.tbl td:first-child{color:var(--t)}
+.tbl tr:hover td{background:#00d4ff05;cursor:pointer}
+.tbl tr:last-child td{border-bottom:none}
+.dual{display:grid;grid-template-columns:200px 1fr;gap:11px}
+.pc-card{background:var(--bg4);border:1px solid var(--bd2);border-radius:7px;padding:9px 11px;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s}
+.pc-card:hover{border-color:var(--cy-bd);background:var(--bg5)}
+.pc-card.active{border-color:var(--cy);background:var(--cy-bg)}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0}
+.avc{background:#00d4ff20;color:var(--cy)}.avg{background:#00e67620;color:var(--gn)}.ava{background:#ffab0020;color:var(--am)}.avr{background:#ff475720;color:var(--rd)}.avp{background:#b388ff20;color:var(--pu)}.avb{background:#448aff20;color:var(--bl)}
+.pcn{font-size:11px;font-weight:500;color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcm{font-size:10px;color:var(--t3)}
+.del-btn{background:transparent;border:none;color:var(--t4);cursor:pointer;padding:3px;border-radius:3px;font-size:12px;flex-shrink:0;transition:all .15s}
+.del-btn:hover{color:var(--rd);background:var(--rd-bg)}
+.metric-col{background:var(--bg4);border:1px solid var(--bd2);border-radius:8px;padding:11px;margin-bottom:8px}
+.mc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.norm-zones{display:flex;height:6px;border-radius:3px;overflow:hidden;margin:6px 0}
+.nz{height:100%}
+.toast{display:none;background:var(--gn-bg);border:1px solid var(--gn-bd);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--gn);margin-bottom:11px;align-items:center;gap:7px;position:fixed;top:70px;right:18px;z-index:200}
+.toast.show{display:flex}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:flex-start;justify-content:center;padding:40px 18px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg3);border:1px solid var(--cy-bd);border-radius:11px;padding:18px;width:480px;max-width:100%;position:relative}
+.mhd{font-size:13px;font-weight:500;color:#fff;margin-bottom:13px;display:flex;justify-content:space-between;align-items:center}
+.mc-x{background:transparent;border:none;color:var(--t3);cursor:pointer;font-size:18px;line-height:1;padding:0 4px}
+.mc-x:hover{color:var(--rd)}
+.save-btn{background:var(--cy);color:#080c10;border:none;border-radius:7px;padding:9px;font-size:12px;font-weight:500;cursor:pointer;width:100%;font-family:inherit;margin-top:10px;transition:background .15s}
+.save-btn:hover{background:var(--cy2)}
+.sep{font-size:9px;color:var(--cy);letter-spacing:.9px;text-transform:uppercase;padding:9px 0 5px;border-bottom:1px solid var(--bd2);margin-bottom:8px;font-weight:500}
+.upload-zone{border:2px dashed var(--bd2);border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:12px}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--cy);background:var(--cy-bg)}
+.ai-box{background:var(--bg4);border:1px solid var(--bd2);border-radius:9px;padding:13px;font-size:12px;color:var(--t2);line-height:1.75;min-height:100px;white-space:pre-wrap}
+.acwr-wrap{background:var(--bg4);border:1px solid var(--bd2);border-radius:9px;padding:13px}
+.acwr-big{font-size:32px;font-weight:500;line-height:1;margin-bottom:3px}
+.acwr-track{position:relative;height:12px;border-radius:6px;overflow:hidden;margin:10px 0 4px;background:var(--bd)}
+.az{position:absolute;height:100%}
+.az1{left:0;width:26.6%;background:#448aff25}
+.az2{left:26.6%;width:46.8%;background:#00e67625}
+.az3{left:73.4%;width:16.6%;background:#ffab0025}
+.az4{left:90%;right:0;background:#ff475730}
+.acwr-n{position:absolute;width:3px;height:100%;border-radius:2px;transform:translateX(-50%);transition:left .5s,background .5s;top:0}
+.zl{display:flex;justify-content:space-between;font-size:9px;color:var(--t4)}
+.chart-wrap{position:relative;width:100%}
+.hint{font-size:10px;color:var(--t3);line-height:1.5;padding:8px 10px;background:var(--bg4);border-radius:6px;border-left:2px solid var(--cy);margin-bottom:10px}
+.demo-banner{background:linear-gradient(90deg,#00d4ff10,#b388ff10);border:1px solid var(--cy-bd);border-radius:8px;padding:9px 13px;font-size:11px;color:var(--cy);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.report-box{background:#fff;color:#111;border-radius:10px;padding:24px 28px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.7}
+.rb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #e63946}
+.rb-title{font-size:18px;font-weight:600;color:#0d1b2a}
+.rb-sub{font-size:11px;color:#666;margin-top:2px}
+.rb-logo{font-size:11px;font-weight:600;color:#e63946;letter-spacing:.5px}
+.rb-section{margin-bottom:18px}
+.rb-sh{font-size:11px;font-weight:600;color:#e63946;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid #f0f0f0}
+.rb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:14px}
+.rb-stat{background:#f8f9fa;border-radius:7px;padding:10px 12px;border-left:3px solid #e63946}
+.rb-stat.good{border-left-color:#00b050}
+.rb-stat.warn{border-left-color:#ff9900}
+.rb-stat.bad{border-left-color:#e63946}
+.rb-sl{font-size:9px;color:#666;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px}
+.rb-sv{font-size:18px;font-weight:600;color:#0d1b2a}
+.rb-ss{font-size:10px;color:#888;margin-top:2px}
+.rb-p{font-size:12px;color:#444;line-height:1.65;margin-bottom:8px}
+.rb-flag{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px}
+.rb-flag.green{background:#e8f5e9;color:#1b5e20}
+.rb-flag.amber{background:#fff8e1;color:#e65100}
+.rb-flag.red{background:#fce4e4;color:#b71c1c}
+.rb-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+.rb-tbl th{background:#f0f0f0;padding:7px 9px;text-align:left;color:#444;font-size:9px;letter-spacing:.5px;text-transform:uppercase}
+.rb-tbl td{padding:7px 9px;border-bottom:1px solid #f5f5f5;color:#333}
+.rb-tbl tr:last-child td{border-bottom:none}
+@media(max-width:700px){.dual{grid-template-columns:1fr}.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}.krow{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon"><i class="ti ti-satellite"></i></div>
+    <div><span class="logo-t">GPS Analytics</span><span class="logo-s">Elite S&C</span></div>
+  </div>
+  <div class="nav">
+    <button class="ntab active" onclick="goP('squad',this)"><i class="ti ti-layout-dashboard"></i>Squad</button>
+    <button class="ntab" onclick="goP('player',this)"><i class="ti ti-user-circle"></i>Player metrics</button>
+    <button class="ntab" onclick="goP('trends',this)"><i class="ti ti-chart-line"></i>Trends</button>
+    <button class="ntab" onclick="goP('avgs',this)"><i class="ti ti-calculator"></i>Session avgs</button>
+    <button class="ntab" onclick="goP('ai',this)"><i class="ti ti-sparkles"></i>AI import</button>
+    <button class="ntab" onclick="goP('report',this)"><i class="ti ti-file-report"></i>Manager report</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;padding:0 4px">
+    <span class="pill pc" id="squad-badge">0 players</span>
+    <span style="font-size:10px;color:var(--t3)" id="date-display"></span>
+  </div>
+</div>
+
+<div class="content">
+<div id="toast" class="toast"><i class="ti ti-check"></i><span id="tmsg">Saved</span></div>
+
+<!-- SQUAD -->
+<div id="page-squad" class="page active">
+  <div class="demo-banner"><i class="ti ti-info-circle"></i>Demo data pre-loaded. Click any player row to view their full profile. Add your own players with the + Add button.</div>
+  <div class="krow">
+    <div class="kpi"><div class="ka" style="background:var(--cy)"></div><div class="kl">Squad</div><div class="kv" id="ksz">0</div><div class="ks">players</div></div>
+    <div class="kpi"><div class="ka" style="background:var(--gn)"></div><div class="kl">Sessions</div><div class="kv" id="kse">—</div><div class="ks">this week</div></div>
+    <div class="kpi"><div class="ka" style="background:var(--am)"></div><div class="kl">ACWR flags</div><div class="kv" id="kfl" style="color:var(--am)">—</div><div class="ks">outside range</div></div>
+    <div class="kpi"><div class="ka" style="background:var(--rd)"></div><div class="kl">Risk alerts</div><div class="kv" id="krk" style="color:var(--rd)">—</div><div class="ks">ACWR &gt;1.5</div></div>
+    <div class="kpi"><div class="ka" style="background:var(--pu)"></div><div class="kl">Avg ACWR</div><div class="kv" id="kav">—</div><div class="ks">squad</div></div>
+    <div class="kpi"><div class="ka" style="background:var(--bl)"></div><div class="kl">Avg TD/session</div><div class="kv" id="ktd">—</div><div class="ks">metres</div></div>
+  </div>
+  <div class="dual">
+    <div>
+      <div class="panel">
+        <div class="ph"><i class="ti ti-users"></i>Roster<div class="ph-r"><button class="btn" onclick="openM('add-player')"><i class="ti ti-plus"></i>Add player</button></div></div>
+        <div id="squad-list"></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="ph"><i class="ti ti-table"></i>Squad GPS snapshot — this week</div>
+        <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Player</th><th>Position</th><th>Sessions</th><th>TD (m)</th><th>Avg HSR</th><th>Avg HMLD</th><th>Max km/h</th><th>ACWR</th><th>Status</th></tr></thead><tbody id="squad-tbody"></tbody></table></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><i class="ti ti-alert-triangle"></i>Flags and alerts</div>
+        <div id="flags-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER METRICS -->
+<div id="page-player" class="page">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <select class="fsel" id="pm-sel" onchange="loadPlayerMetrics()" style="min-width:160px"><option value="">Select player...</option></select>
+    <select class="fsel" id="pm-week" onchange="loadPlayerMetrics()">
+      <option value="7">This week</option><option value="14">Last 2 weeks</option><option value="28">Last 28 days</option><option value="0">All sessions</option>
+    </select>
+    <span style="font-size:11px;color:var(--t3)">
+      Colour: <span style="color:var(--gn)">■</span> within norm &nbsp;
+      <span style="color:var(--am)">■</span> caution &nbsp;
+      <span style="color:var(--rd)">■</span> outside norm
+    </span>
+  </div>
+  <div id="pm-empty" style="color:var(--t4);text-align:center;padding:40px;font-size:12px">Select a player above to view colour-coded metrics.</div>
+  <div id="pm-content" style="display:none">
+    <div class="sep">External load</div>
+    <div class="g3" id="pm-load-cards"></div>
+    <div class="sep">High intensity running</div>
+    <div class="g3" id="pm-hi-cards"></div>
+    <div class="sep">Mechanical load</div>
+    <div class="g3" id="pm-mech-cards"></div>
+    <div class="sep">Workload ratios</div>
+    <div class="g3" id="pm-ratio-cards"></div>
+  </div>
+</div>
+
+<!-- TRENDS -->
+<div id="page-trends" class="page">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <select class="fsel" id="tr-sel" onchange="loadTrends()" style="min-width:160px"><option value="">Select player...</option></select>
+    <select class="fsel" id="tr-metric" onchange="loadTrends()">
+      <option value="td">Total distance (TD)</option>
+      <option value="hsr">HSR</option>
+      <option value="spr">Sprint distance</option>
+      <option value="hmld">HMLD</option>
+      <option value="acc">Accelerations</option>
+      <option value="dec">Decelerations</option>
+      <option value="spd">Max speed</option>
+      <option value="pl">Player load</option>
+    </select>
+    <span style="font-size:10px;color:var(--t3)">8-week rolling weekly averages · bars = last 10 sessions</span>
+  </div>
+  <div id="tr-empty" style="color:var(--t4);text-align:center;padding:40px;font-size:12px">Select a player and metric to view trend charts.</div>
+  <div id="tr-content" style="display:none">
+    <div class="panel">
+      <div class="ph"><i class="ti ti-chart-line"></i><span id="tr-title">Weekly trend</span><div class="ph-r"><span id="tr-badge" class="pill pgr"></span></div></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="trend-chart" role="img" aria-label="Weekly GPS metric trend line chart"></canvas></div>
+    </div>
+    <div class="g2">
+      <div class="panel">
+        <div class="ph"><i class="ti ti-chart-bar"></i>Session-by-session (last 10)</div>
+        <div class="chart-wrap" style="height:180px"><canvas id="session-chart" role="img" aria-label="Session GPS metric bar chart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><i class="ti ti-math"></i>Trend stats</div>
+        <div id="trend-stats"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SESSION AVERAGES -->
+<div id="page-avgs" class="page">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <select class="fsel" id="av-sel" onchange="loadAvgs()" style="min-width:160px"><option value="">Select player...</option></select>
+    <span style="font-size:10px;color:var(--t3)">Day-by-day and week-by-week session averages</span>
+  </div>
+  <div id="av-empty" style="color:var(--t4);text-align:center;padding:40px;font-size:12px">Select a player to view session averages.</div>
+  <div id="av-content" style="display:none">
+    <div class="sep">Day-by-day averages — last 7 days</div>
+    <div class="panel"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Sessions</th><th>Avg TD (m)</th><th>Avg HSR (m)</th><th>Avg HMLD (m)</th><th>Avg Acc</th><th>Avg Dec</th><th>Avg RPE</th><th>Total load</th></tr></thead><tbody id="day-tbody"></tbody></table></div></div>
+    <div class="sep">Week-by-week averages — last 6 weeks</div>
+    <div class="panel"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Week</th><th>Sessions</th><th>Avg TD/sess</th><th>Total TD</th><th>Avg HSR/sess</th><th>Total HSR</th><th>Avg HMLD/sess</th><th>Total HMLD</th><th>Avg RPE</th><th>ACWR</th><th>T:M ratio</th></tr></thead><tbody id="week-tbody"></tbody></table></div></div>
+    <div class="sep">Position comparison</div>
+    <div class="panel"><div id="pos-avg-content"></div></div>
+  </div>
+</div>
+
+<!-- AI IMPORT -->
+<div id="page-ai" class="page">
+  <div class="g2">
+    <div>
+      <div class="panel" style="margin-bottom:11px">
+        <div class="ph"><i class="ti ti-sparkles"></i>AI screenshot reader<div class="ph-r"><span class="pill pg"><i class="ti ti-circle-check" style="font-size:11px"></i>Claude-powered</span></div></div>
+        <div class="hint" style="margin-bottom:12px">Upload a screenshot from any GPS platform — STATSports, Catapult, Polar, Kitman Labs. Claude reads it, extracts every metric, benchmarks against elite norms, and gives a full sport science report.</div>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-in').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+          <i class="ti ti-cloud-upload" style="font-size:32px;color:var(--cy);display:block;margin-bottom:8px"></i>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:4px">Drop GPS screenshot or click to upload</div>
+          <div style="font-size:10px;color:var(--t3)">PNG · JPG · WEBP · Any GPS platform</div>
+        </div>
+        <input type="file" id="file-in" accept="image/*" style="display:none" onchange="handleFile(event)">
+        <div id="prev-wrap" style="display:none;margin-bottom:12px">
+          <img id="prev-img" style="width:100%;border-radius:8px;border:1px solid var(--cy-bd);max-height:180px;object-fit:contain;background:var(--bg4)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+            <span style="font-size:10px;color:var(--t3)" id="fname"></span>
+            <button class="btn-g" onclick="clearFile()" style="padding:4px 8px;font-size:10px">Clear</button>
+          </div>
+        </div>
+        <div class="fg"><div class="fl">Additional context (optional)</div><input class="fi" id="ai-ctx" placeholder="e.g. Match day data — centre midfielder"></div>
+        <button class="btn" style="width:100%;padding:10px;margin-bottom:8px" id="ai-btn" onclick="doAnalyse()" disabled><i class="ti ti-brain"></i>Analyse screenshot</button>
+      </div>
+      <div class="panel">
+        <div class="ph"><i class="ti ti-clipboard-text"></i>Or paste GPS data as text</div>
+        <textarea class="fi" id="paste-area" style="height:90px;resize:none" placeholder="Paste raw GPS data, CSV rows, or any copied table from your platform..."></textarea>
+        <button class="btn-g" style="width:100%;margin-top:8px;padding:9px" onclick="doAnalyseText()"><i class="ti ti-search"></i>Analyse pasted data</button>
+      </div>
+    </div>
+    <div>
+      <div class="panel" style="margin-bottom:11px">
+        <div class="ph"><i class="ti ti-report-analytics"></i>Claude's sport science report</div>
+        <div class="ai-box" id="ai-out">Upload a GPS screenshot or paste data above. Claude will extract all metrics, benchmark against professional norms, flag anomalies, and give 48–72 hour recommendations.</div>
+      </div>
+      <div class="panel">
+        <div class="ph"><i class="ti ti-table-import"></i>Extracted metrics — ready to log</div>
+        <div class="g3" style="margin-bottom:10px">
+          <div class="kpi" style="padding:10px"><div class="kl">Total distance</div><div class="kv" id="ex-td" style="font-size:17px;color:var(--cy)">—</div><div class="ks">m</div></div>
+          <div class="kpi" style="padding:10px"><div class="kl">HSR</div><div class="kv" id="ex-hsr" style="font-size:17px;color:var(--gn)">—</div><div class="ks">m</div></div>
+          <div class="kpi" style="padding:10px"><div class="kl">Sprint</div><div class="kv" id="ex-spr" style="font-size:17px;color:var(--am)">—</div><div class="ks">m</div></div>
+        </div>
+        <div class="g3" style="margin-bottom:10px">
+          <div class="kpi" style="padding:10px"><div class="kl">HMLD</div><div class="kv" id="ex-hmld" style="font-size:17px;color:var(--pu)">—</div><div class="ks">m</div></div>
+          <div class="kpi" style="padding:10px"><div class="kl">Accel</div><div class="kv" id="ex-acc" style="font-size:17px">—</div></div>
+          <div class="kpi" style="padding:10px"><div class="kl">Decel</div><div class="kv" id="ex-dec" style="font-size:17px">—</div></div>
+        </div>
+        <div class="g3" style="margin-bottom:12px">
+          <div class="kpi" style="padding:10px"><div class="kl">Max speed</div><div class="kv" id="ex-spd" style="font-size:17px;color:var(--rd)">—</div><div class="ks">km/h</div></div>
+          <div class="kpi" style="padding:10px"><div class="kl">Player load</div><div class="kv" id="ex-pl" style="font-size:17px">—</div></div>
+          <div class="kpi" style="padding:10px"><div class="kl">Duration</div><div class="kv" id="ex-dur" style="font-size:17px">—</div><div class="ks">min</div></div>
+        </div>
+        <div class="fg"><div class="fl">Log to player</div><select class="fsel" id="log-to" style="width:100%"><option value="">Select player...</option></select></div>
+        <button class="btn" style="width:100%;padding:10px" onclick="logExtracted()"><i class="ti ti-device-floppy"></i>Log extracted data to player</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGER REPORT -->
+<div id="page-report" class="page">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <select class="fsel" id="rp-sel" style="min-width:160px"><option value="">Full squad report</option></select>
+    <select class="fsel" id="rp-type">
+      <option value="weekly">Weekly report</option>
+      <option value="squad">Full squad overview</option>
+    </select>
+    <input class="fi" id="rp-team" placeholder="Team / club name" style="max-width:180px;padding:6px 9px">
+    <button class="btn" onclick="genReport()"><i class="ti ti-file-report"></i>Generate report</button>
+    <button class="btn-g" onclick="printReport()"><i class="ti ti-printer"></i>Print / save PDF</button>
+  </div>
+  <div id="report-out"></div>
+</div>
+
+</div>
+
+<!-- ADD PLAYER MODAL -->
+<div class="modal-overlay" id="add-player-modal">
+  <div class="modal">
+    <div class="mhd"><span><i class="ti ti-user-plus" style="color:var(--cy);margin-right:6px"></i>Add player</span><button class="mc-x" onclick="closeM('add-player-modal')">×</button></div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Full name</div><input class="fi" id="np-name" placeholder="e.g. Ciarán Walsh"></div>
+      <div class="fg"><div class="fl">Squad number</div><input class="fi" id="np-num" type="number" placeholder="7"></div>
+    </div>
+    <div class="fg"><div class="fl">Position</div>
+      <select class="fsel" id="np-pos" style="width:100%">
+        <option>Goalkeeper</option><option>Centre-back</option><option>Full-back</option><option>Wing-back</option>
+        <option>Defensive midfielder</option><option>Central midfielder</option><option>Attacking midfielder</option>
+        <option>Winger</option><option>Striker</option><option>Other</option>
+      </select>
+    </div>
+    <div class="g2">
+      <div class="fg"><div class="fl">MAS (km/h)</div><input class="fi" id="np-mas" type="number" placeholder="16.5" step="0.1"></div>
+      <div class="fg"><div class="fl">MSS (km/h)</div><input class="fi" id="np-mss" type="number" placeholder="33.0" step="0.1"></div>
+    </div>
+    <div class="fg"><div class="fl">Match reference TD (m)</div><input class="fi" id="np-mref" type="number" placeholder="e.g. 10800 — avg match distance"></div>
+    <div class="fg"><div class="fl">Notes</div><textarea class="fi" id="np-notes" style="height:52px;resize:none" placeholder="Injury history, key dates..."></textarea></div>
+    <button class="save-btn" onclick="savePlayer()">Save player</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const AVC=['avc','avg','ava','avr','avp','avb'];
+let avI=0,PLAYERS=[],SESS={},trendChart=null,sessChart=null,b64=null,mime=null,exData={};
+
+const NORMS={
+  td:{label:'Total distance',unit:'m',low:8500,ok:10000,high:12500,elite:13000,desc:'Match: 10–12km · Training MD3/4: 7–9km'},
+  hsr:{label:'HSR',unit:'m',low:600,ok:900,high:1400,elite:1800,desc:'Match: 1,000–1,400m · Training: 600–900m'},
+  spr:{label:'Sprint distance',unit:'m',low:200,ok:350,high:600,elite:800,desc:'Match: 300–600m · Training: 150–350m'},
+  hmld:{label:'HMLD',unit:'m',low:1200,ok:1800,high:2400,elite:2900,desc:'Match: 1,800–2,400m · Training: 1,200–1,800m'},
+  acc:{label:'Accelerations',unit:'#',low:25,ok:40,high:60,elite:75,desc:'Match: 40–70 · Training MD3/4: 25–50'},
+  dec:{label:'Decelerations',unit:'#',low:22,ok:36,high:56,elite:70,desc:'Match: 36–65 · Training MD3/4: 22–45'},
+  spd:{label:'Max speed',unit:'km/h',low:24,ok:28,high:33,elite:36,desc:'Elite: >30 km/h · High performance: >33 km/h'},
+  pl:{label:'Player load',unit:'AU',low:450,ok:650,high:950,elite:1100,desc:'Match: 700–1,000 · Training: 450–750'},
+  hsr_pct:{label:'HSR % of TD',unit:'%',low:8,ok:11,high:15,elite:18,desc:'Elite match: 10–13% of total distance as HSR'},
+  hmld_pct:{label:'HMLD % of TD',unit:'%',low:14,ok:18,high:24,elite:28,desc:'Elite match: 16–22% of total distance as HMLD'},
+  acc_dec:{label:'Acc:Dec ratio',unit:'',low:0.8,ok:1.0,high:1.3,elite:1.5,desc:'Balanced: ~1.0 · High ratio = acceleration dominant'},
+  acwr:{label:'ACWR',unit:'',low:0.8,ok:1.0,high:1.3,elite:1.5,desc:'Optimal: 0.8–1.3 · Risk zone: >1.5'}
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function dA(n){const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().split('T')[0];}
+function toast(msg){const t=document.getElementById('toast');document.getElementById('tmsg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function goP(id,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));el.classList.add('active');}
+function openM(id){document.getElementById(id+'-modal').classList.add('open')}
+function closeM(id){document.getElementById(id+'-modal').classList.remove('open')}
+
+function valColor(key,val){
+  const n=NORMS[key];if(!n||val===null||val===undefined)return'var(--t3)';
+  if(key==='acwr'){return val<0.8?'var(--bl)':val<=1.3?'var(--gn)':val<=1.5?'var(--am)':'var(--rd)';}
+  if(val>=n.ok&&val<=n.high)return'var(--gn)';
+  if(val>n.high&&val<=n.elite)return'var(--am)';
+  if(val>n.elite)return'var(--rd)';
+  if(val>=n.low&&val<n.ok)return'var(--am)';
+  return'var(--rd)';
+}
+function valHex(key,val){const c=valColor(key,val);return c==='var(--gn)'?'#00e676':c==='var(--am)'?'#ffab00':c==='var(--rd)'?'#ff4757':c==='var(--bl)'?'#448aff':'#4a6278';}
+function valPill(key,val){const c=valColor(key,val);return c==='var(--gn)'?'pg':c==='var(--am)'?'pa':c==='var(--rd)'?'pr':c==='var(--bl)'?'pp':'pgr';}
+function valLabel(key,val){const n=NORMS[key];if(!n||val===null)return'No data';if(key==='acwr'){return val<0.8?'Under-trained':val<=1.3?'Optimal':val<=1.5?'Caution':'Risk zone';}if(val>=n.ok&&val<=n.high)return'In range';if(val<n.low)return'Below norm';if(val>n.elite)return'Very high';return'Caution';}
+
+function calcACWR(pid){
+  const ss=SESS[pid]||[];if(!ss.length)return null;
+  const t=new Date();t.setHours(0,0,0,0);
+  const a7=ss.filter(s=>s.date&&(t-new Date(s.date))/864e5<=7).reduce((a,s)=>a+(s.td||0),0);
+  const a28=ss.filter(s=>s.date&&(t-new Date(s.date))/864e5<=28).reduce((a,s)=>a+(s.td||0),0);
+  const ch=a28/4;
+  return{ratio:ch>0?Math.round((a7/ch)*100)/100:null,acute:Math.round(a7),chronic:Math.round(ch)};
+}
+
+function metricCard(key,val,sessions){
+  const n=NORMS[key];if(!n)return'';
+  const col=valColor(key,val);
+  const pct=val&&n.elite>0?Math.min(100,Math.round((val/n.elite)*100)):0;
+  const display=val!==null&&val!==undefined?Math.round(val*10)/10+' '+n.unit:'—';
+  return`<div class="metric-col">
+    <div class="mc-header"><span style="font-size:9px;color:var(--t3);letter-spacing:.6px;text-transform:uppercase">${n.label}</span><span class="pill ${valPill(key,val)}" style="font-size:9px">${valLabel(key,val)}</span></div>
+    <div style="font-size:22px;font-weight:500;color:${col};margin-bottom:6px">${display}</div>
+    <div class="norm-zones">
+      <div class="nz" style="width:${Math.round((n.low/n.elite)*100)}%;background:var(--rd-bg);border-right:1px solid var(--rd-bd)"></div>
+      <div class="nz" style="width:${Math.round(((n.ok-n.low)/n.elite)*100)}%;background:var(--am-bg);border-right:1px solid var(--am-bd)"></div>
+      <div class="nz" style="width:${Math.round(((n.high-n.ok)/n.elite)*100)}%;background:var(--gn-bg);border-right:1px solid var(--gn-bd)"></div>
+      <div class="nz" style="flex:1;background:var(--am-bg)"></div>
+    </div>
+    <div style="position:relative;height:0"><div style="position:absolute;top:-7px;left:${pct}%;width:2px;height:14px;background:${col};transform:translateX(-50%);border-radius:1px"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t4);margin-top:4px"><span style="color:var(--rd-bd)">Low</span><span style="color:var(--am)">OK</span><span style="color:var(--gn)">Norm</span><span style="color:var(--am)">High</span><span style="color:var(--rd)">Max</span></div>
+    <div style="font-size:9px;color:var(--t4);margin-top:5px">${n.desc}</div>
+    ${sessions?`<div style="font-size:9px;color:var(--t3);margin-top:3px">Based on ${sessions} session${sessions!==1?'s':''}</div>`:''}
+  </div>`;
+}
+
+// ============================================================
+// PLAYERS
+// ============================================================
+function addP(name,num,pos,mas,mss,mref,notes){
+  const id=Date.now()+Math.random();
+  const ini=name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
+  const av=AVC[avI%AVC.length];avI++;
+  const asr=mas&&mss?Math.round((mss-mas)*10)/10:null;
+  PLAYERS.push({id,name,ini,av,pos,num,mas,mss,asr,mref,notes});
+  SESS[id]=[];return id;
+}
+function addS(pid,date,type,td,hsr,spr,hmld,acc,dec,spd,pl,rpe,dur){SESS[pid].push({date,type,td,hsr,spr,hmld,acc,dec,spd,pl,rpe,dur});}
+
+function savePlayer(){
+  const name=document.getElementById('np-name').value.trim();if(!name)return;
+  addP(name,document.getElementById('np-num').value,document.getElementById('np-pos').value,parseFloat(document.getElementById('np-mas').value)||null,parseFloat(document.getElementById('np-mss').value)||null,parseFloat(document.getElementById('np-mref').value)||null,document.getElementById('np-notes').value);
+  closeM('add-player');
+  ['np-name','np-num','np-mas','np-mss','np-mref','np-notes'].forEach(i=>document.getElementById(i).value='');
+  renderAll();toast(name+' added to squad');
+}
+
+function delP(e,id){
+  e.stopPropagation();
+  const p=PLAYERS.find(x=>x.id===id);if(!confirm('Remove '+p.name+' and all their session data?'))return;
+  PLAYERS=PLAYERS.filter(x=>x.id!==id);delete SESS[id];
+  renderAll();toast(p.name+' removed');
+}
+
+function renderAll(){
+  renderSquadList();renderSquadTable();populateSelects();
+  document.getElementById('squad-badge').textContent=PLAYERS.length+' player'+(PLAYERS.length!==1?'s':'');
+  document.getElementById('ksz').textContent=PLAYERS.length;
+}
+
+function populateSelects(){
+  ['pm-sel','tr-sel','av-sel'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const v=el.value;
+    el.innerHTML='<option value="">Select player...</option>'+PLAYERS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    el.value=v;
+  });
+  const rp=document.getElementById('rp-sel');if(rp){const v=rp.value;rp.innerHTML='<option value="">Full squad</option>'+PLAYERS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');rp.value=v;}
+  const lt=document.getElementById('log-to');if(lt){const v=lt.value;lt.innerHTML='<option value="">Select player...</option>'+PLAYERS.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');lt.value=v;}
+}
+
+function renderSquadList(){
+  const el=document.getElementById('squad-list');
+  if(!PLAYERS.length){el.innerHTML='<div style="color:var(--t4);font-size:11px;text-align:center;padding:18px;line-height:1.7">No players yet.<br>Click + Add player above to get started.</div>';return;}
+  el.innerHTML=PLAYERS.map(p=>`
+    <div class="pc-card" onclick="goToPlayer(${JSON.stringify(p.id)})">
+      <div class="av ${p.av}">${p.ini}</div>
+      <div style="flex:1;min-width:0"><div class="pcn">${p.num?'#'+p.num+' ':''}${p.name}</div><div class="pcm">${p.pos}</div></div>
+      <button class="del-btn" onclick="delP(event,${JSON.stringify(p.id)})" title="Remove player"><i class="ti ti-trash"></i></button>
+    </div>`).join('');
+}
+
+function goToPlayer(id){
+  document.getElementById('pm-sel').value=id;
+  goP('player',document.querySelectorAll('.ntab')[1]);
+  loadPlayerMetrics();
+}
+
+function renderSquadTable(){
+  const tb=document.getElementById('squad-tbody');
+  if(!PLAYERS.length){tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--t4);padding:18px">No players yet.</td></tr>';return;}
+  const today=new Date();today.setHours(0,0,0,0);
+  let flags=0,risks=0,totalSess=0,acwrSum=0,acwrCt=0,tdSum=0,tdCt=0;
+  tb.innerHTML=PLAYERS.map(p=>{
+    const ss=SESS[p.id]||[];
+    const tw=ss.filter(s=>s.date&&(today-new Date(s.date))/864e5<=7);
+    totalSess+=tw.length;
+    const twTD=tw.reduce((a,s)=>a+(s.td||0),0);
+    if(tw.length){tdSum+=twTD/tw.length;tdCt++;}
+    const avgHSR=tw.length?Math.round(tw.reduce((a,s)=>a+(s.hsr||0),0)/tw.length):null;
+    const avgHMLD=tw.length?Math.round(tw.reduce((a,s)=>a+(s.hmld||0),0)/tw.length):null;
+    const maxSpd=ss.length?Math.max(...ss.map(s=>s.spd||0)):null;
+    const acwr=calcACWR(p.id);const r=acwr?acwr.ratio:null;
+    if(r){acwrSum+=r;acwrCt++;}
+    if(r&&(r<0.8||r>1.3))flags++;if(r&&r>1.5)risks++;
+    const aP=!r?'<span class="pill pgr">—</span>':r<0.8?`<span class="pill pp">${r.toFixed(2)}</span>`:r<=1.3?`<span class="pill pg">${r.toFixed(2)}</span>`:r<=1.5?`<span class="pill pa">${r.toFixed(2)}</span>`:`<span class="pill pr">${r.toFixed(2)} ⚠</span>`;
+    return`<tr onclick="goToPlayer(${JSON.stringify(p.id)})">
+      <td><div style="display:flex;align-items:center;gap:7px"><div class="av ${p.av}" style="width:22px;height:22px;font-size:9px">${p.ini}</div>${p.name}</div></td>
+      <td><span class="pill pgr" style="font-size:9px">${p.pos.split(' ').map(w=>w[0]).join('')}</span></td>
+      <td style="text-align:center">${tw.length}</td>
+      <td style="color:${twTD?valHex('td',twTD/Math.max(tw.length,1)):'var(--t2)'};font-weight:500">${twTD?twTD.toLocaleString():'—'}</td>
+      <td style="color:${avgHSR?valHex('hsr',avgHSR):'var(--t2)'}">${avgHSR??'—'}</td>
+      <td style="color:${avgHMLD?valHex('hmld',avgHMLD):'var(--t2)'}">${avgHMLD??'—'}</td>
+      <td style="color:var(--rd)">${maxSpd??'—'}</td>
+      <td>${aP}</td>
+      <td>${!r?'<span class="pill pgr">No data</span>':r>1.5?'<span class="pill pr">Risk</span>':r>1.3?'<span class="pill pa">Caution</span>':'<span class="pill pg">OK</span>'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('kse').textContent=totalSess;
+  document.getElementById('kfl').textContent=flags;
+  document.getElementById('krk').textContent=risks;
+  document.getElementById('kav').textContent=acwrCt?(acwrSum/acwrCt).toFixed(2):'—';
+  document.getElementById('ktd').textContent=tdCt?Math.round(tdSum/tdCt).toLocaleString():'—';
+  const fl=document.getElementById('flags-list');
+  const items=[];
+  PLAYERS.forEach(p=>{const a=calcACWR(p.id);if(!a||!a.ratio)return;const r=a.ratio;
+    if(r>1.5)items.push({c:'var(--rd)',t:`${p.name} — ACWR ${r.toFixed(2)}: injury risk zone. Immediate load reduction recommended.`});
+    else if(r>1.3)items.push({c:'var(--am)',t:`${p.name} — ACWR ${r.toFixed(2)}: caution zone. Avoid high-intensity sessions.`});
+    else if(r<0.8)items.push({c:'var(--bl)',t:`${p.name} — ACWR ${r.toFixed(2)}: under-trained. Progressive increase recommended.`});
+  });
+  fl.innerHTML=items.length?items.map(i=>`<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd);align-items:flex-start"><div style="width:6px;height:6px;border-radius:50%;background:${i.c};flex-shrink:0;margin-top:3px"></div><div style="font-size:11px;color:var(--t2);line-height:1.5">${i.t}</div></div>`).join(''):'<div style="color:var(--t4);font-size:11px">All clear — all players within normal ACWR parameters.</div>';
+}
+
+// ============================================================
+// PLAYER METRICS
+// ============================================================
+function loadPlayerMetrics(){
+  const id=parseFloat(document.getElementById('pm-sel').value);
+  const days=parseInt(document.getElementById('pm-week').value)||9999;
+  const p=PLAYERS.find(x=>x.id===id);
+  if(!p){document.getElementById('pm-empty').style.display='';document.getElementById('pm-content').style.display='none';return;}
+  document.getElementById('pm-empty').style.display='none';document.getElementById('pm-content').style.display='block';
+  const today=new Date();today.setHours(0,0,0,0);
+  const ss=(SESS[id]||[]).filter(s=>!days||!s.date||(today-new Date(s.date))/864e5<=days);
+  const n=ss.length;
+  const avg=k=>n?Math.round(ss.reduce((a,s)=>a+(s[k]||0),0)/n):null;
+  const aT=avg('td'),aH=avg('hsr'),aS=avg('spr'),aHM=avg('hmld'),aA=avg('acc'),aD=avg('dec'),aSp=ss.length?Math.round(Math.max(...ss.map(s=>s.spd||0))*10)/10:null,aP=avg('pl');
+  const hPct=aT&&aH?Math.round((aH/aT)*100):null;
+  const hmPct=aT&&aHM?Math.round((aHM/aT)*100):null;
+  const adR=aA&&aD?Math.round((aA/aD)*100)/100:null;
+  const acwr=calcACWR(id);
+  document.getElementById('pm-load-cards').innerHTML=metricCard('td',aT,n)+metricCard('pl',aP,n)+metricCard('spd',aSp,n);
+  document.getElementById('pm-hi-cards').innerHTML=metricCard('hsr',aH,n)+metricCard('spr',aS,n)+metricCard('hmld',aHM,n);
+  document.getElementById('pm-mech-cards').innerHTML=metricCard('acc',aA,n)+metricCard('dec',aD,n)+metricCard('hsr_pct',hPct,n);
+  document.getElementById('pm-ratio-cards').innerHTML=metricCard('acwr',acwr?acwr.ratio:null,n)+metricCard('hmld_pct',hmPct,n)+metricCard('acc_dec',adR,n);
+}
+
+// ============================================================
+// TRENDS
+// ============================================================
+function loadTrends(){
+  const id=parseFloat(document.getElementById('tr-sel').value);
+  const metric=document.getElementById('tr-metric').value;
+  const p=PLAYERS.find(x=>x.id===id);
+  if(!p||!metric){document.getElementById('tr-empty').style.display='';document.getElementById('tr-content').style.display='none';return;}
+  document.getElementById('tr-empty').style.display='none';document.getElementById('tr-content').style.display='block';
+  const ss=SESS[id]||[];const today=new Date();today.setHours(0,0,0,0);
+  const n=NORMS[metric];
+  document.getElementById('tr-title').textContent=p.name+' — '+(n?n.label:metric)+' trend';
+  const weeks=[],wLabels=[];
+  for(let w=7;w>=0;w--){
+    const wE=new Date(today);wE.setDate(wE.getDate()-w*7);
+    const wS=new Date(wE);wS.setDate(wS.getDate()-6);
+    const wSS=ss.filter(s=>{if(!s.date)return false;const d=new Date(s.date);return d>=wS&&d<=wE;});
+    const val=wSS.length?(metric==='spd'?Math.max(...wSS.map(s=>s.spd||0)):Math.round(wSS.reduce((a,s)=>a+(s[metric]||0),0)/wSS.length)):null;
+    weeks.push(val);wLabels.push('W-'+w);
+  }
+  if(trendChart)trendChart.destroy();
+  const tCtx=document.getElementById('trend-chart').getContext('2d');
+  trendChart=new Chart(tCtx,{type:'line',data:{labels:wLabels,datasets:[{label:n?n.label:metric,data:weeks,borderColor:'#00d4ff',backgroundColor:'#00d4ff18',borderWidth:2,pointBackgroundColor:weeks.map(v=>v!==null?valHex(metric,v):'#4a6278'),pointRadius:5,pointBorderColor:'#080c10',pointBorderWidth:2,tension:0.3,fill:true,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${n?n.label:metric}: ${c.parsed.y!==null?c.parsed.y.toLocaleString()+' '+(n?n.unit:''):'-'}`}}},scales:{x:{ticks:{color:'#4a6278',font:{size:10}},grid:{color:'#1e2830'}},y:{ticks:{color:'#4a6278',font:{size:10},callback:v=>v.toLocaleString()},grid:{color:'#1e2830'}}}}});
+  const latest=weeks.filter(v=>v!==null).slice(-1)[0];
+  if(latest!==undefined&&latest!==null){const b=document.getElementById('tr-badge');b.className='pill '+valPill(metric,latest);b.textContent=latest.toLocaleString()+' '+(n?n.unit:'');}
+  const recent=[...ss].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,10).reverse();
+  if(sessChart)sessChart.destroy();
+  const sCtx=document.getElementById('session-chart').getContext('2d');
+  sessChart=new Chart(sCtx,{type:'bar',data:{labels:recent.map(s=>s.date?s.date.slice(5):'?'),datasets:[{label:n?n.label:metric,data:recent.map(s=>s[metric]||null),backgroundColor:recent.map(s=>valHex(metric,s[metric]||0)+'99'),borderColor:recent.map(s=>valHex(metric,s[metric]||0)),borderWidth:1,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a6278',font:{size:9},maxRotation:45},grid:{color:'#1e2830'}},y:{ticks:{color:'#4a6278',font:{size:9}},grid:{color:'#1e2830'}}}}});
+  const vals=recent.map(s=>s[metric]||0).filter(v=>v>0);
+  const mn=vals.length?Math.round(vals.reduce((a,v)=>a+v,0)/vals.length):null;
+  const mx=vals.length?Math.round(Math.max(...vals)):null;
+  const lo=vals.length?Math.round(Math.min(...vals)):null;
+  document.getElementById('trend-stats').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="background:var(--bg4);border-radius:7px;padding:9px 11px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">Average (last 10)</div><div style="font-size:18px;font-weight:500;color:${mn?valHex(metric,mn):'var(--t3)'}">${mn??'—'} ${n?n.unit:''}</div></div>
+      <div style="background:var(--bg4);border-radius:7px;padding:9px 11px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">Peak</div><div style="font-size:18px;font-weight:500;color:${mx?valHex(metric,mx):'var(--t3)'}">${mx??'—'} ${n?n.unit:''}</div></div>
+      <div style="background:var(--bg4);border-radius:7px;padding:9px 11px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">Low</div><div style="font-size:18px;font-weight:500;color:var(--t2)">${lo??'—'} ${n?n.unit:''}</div></div>
+      <div style="background:var(--bg4);border-radius:7px;padding:9px 11px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">Total sessions</div><div style="font-size:18px;font-weight:500;color:var(--cy)">${ss.length}</div></div>
+    </div>
+    ${n?`<div style="font-size:10px;color:var(--t3);margin-top:10px;padding:8px;background:var(--bg4);border-radius:6px;border-left:2px solid var(--cy)">${n.desc}</div>`:''}`;
+}
+
+// ============================================================
+// SESSION AVERAGES
+// ============================================================
+function loadAvgs(){
+  const id=parseFloat(document.getElementById('av-sel').value);
+  const p=PLAYERS.find(x=>x.id===id);
+  if(!p){document.getElementById('av-empty').style.display='';document.getElementById('av-content').style.display='none';return;}
+  document.getElementById('av-empty').style.display='none';document.getElementById('av-content').style.display='block';
+  const ss=SESS[id]||[];const today=new Date();today.setHours(0,0,0,0);
+  const dayRows=[];
+  for(let d=6;d>=0;d--){
+    const dt=new Date(today);dt.setDate(dt.getDate()-d);
+    const dStr=dt.toISOString().split('T')[0];
+    const dSS=ss.filter(s=>s.date===dStr);const nD=dSS.length;
+    const avgF=k=>nD?Math.round(dSS.reduce((a,s)=>a+(s[k]||0),0)/nD):null;
+    const tdV=avgF('td'),hsrV=avgF('hsr'),hmldV=avgF('hmld'),accV=avgF('acc'),decV=avgF('dec'),rpeV=avgF('rpe');
+    const tdLoad=nD?dSS.reduce((a,s)=>a+(s.td||0),0):null;
+    dayRows.push(`<tr>
+      <td>${dStr}</td>
+      <td style="text-align:center;color:${nD?'var(--cy)':'var(--t4)'}">${nD}</td>
+      <td style="color:${tdV?valHex('td',tdV):'var(--t4)'}">${tdV??'—'}</td>
+      <td style="color:${hsrV?valHex('hsr',hsrV):'var(--t4)'}">${hsrV??'—'}</td>
+      <td style="color:${hmldV?valHex('hmld',hmldV):'var(--t4)'}">${hmldV??'—'}</td>
+      <td style="color:${accV?valHex('acc',accV):'var(--t4)'}">${accV??'—'}</td>
+      <td style="color:${decV?valHex('dec',decV):'var(--t4)'}">${decV??'—'}</td>
+      <td>${rpeV??'—'}</td>
+      <td style="color:var(--pu)">${tdLoad?tdLoad.toLocaleString():'—'}</td>
+    </tr>`);
+  }
+  document.getElementById('day-tbody').innerHTML=dayRows.join('');
+  const weekRows=[];
+  for(let w=0;w<6;w++){
+    const wE=new Date(today);wE.setDate(wE.getDate()-w*7);
+    const wS=new Date(wE);wS.setDate(wS.getDate()-6);
+    const wSS=ss.filter(s=>{if(!s.date)return false;const d=new Date(s.date);return d>=wS&&d<=wE;});
+    const nW=wSS.length;
+    const avgF=k=>nW?Math.round(wSS.reduce((a,s)=>a+(s[k]||0),0)/nW):null;
+    const totF=k=>nW?wSS.reduce((a,s)=>a+(s[k]||0),0):null;
+    const mTD=wSS.filter(s=>s.type==='Match').reduce((a,s)=>a+(s.td||0),0);
+    const tTD=wSS.filter(s=>s.type!=='Match').reduce((a,s)=>a+(s.td||0),0);
+    const tm=mTD>0?Math.round((tTD/mTD)*10)/10:null;
+    const acwrW=w===0?calcACWR(id):null;const rW=acwrW?acwrW.ratio:null;
+    const aTD=avgF('td'),totTD=totF('td'),aHSR=avgF('hsr'),totHSR=totF('hsr'),aHMLD=avgF('hmld'),totHMLD=totF('hmld'),aRPE=avgF('rpe');
+    weekRows.push(`<tr>
+      <td style="font-weight:500">${w===0?'This week':w===1?'Last week':'W-'+(w+1)}</td>
+      <td style="text-align:center;color:${nW?'var(--cy)':'var(--t4)'}">${nW}</td>
+      <td style="color:${aTD?valHex('td',aTD):'var(--t4)'}">${aTD??'—'}</td>
+      <td style="color:var(--pu)">${totTD?totTD.toLocaleString():'—'}</td>
+      <td style="color:${aHSR?valHex('hsr',aHSR):'var(--t4)'}">${aHSR??'—'}</td>
+      <td style="color:var(--gn)">${totHSR?totHSR.toLocaleString():'—'}</td>
+      <td style="color:${aHMLD?valHex('hmld',aHMLD):'var(--t4)'}">${aHMLD??'—'}</td>
+      <td style="color:var(--am)">${totHMLD?totHMLD.toLocaleString():'—'}</td>
+      <td>${aRPE??'—'}</td>
+      <td>${rW?`<span class="pill ${rW<0.8?'pp':rW<=1.3?'pg':rW<=1.5?'pa':'pr'}">${rW.toFixed(2)}</span>`:'—'}</td>
+      <td>${tm?`<span class="pill ${tm>=3&&tm<=4?'pg':tm>4?'pa':'pp'}">${tm}:1</span>`:'—'}</td>
+    </tr>`);
+  }
+  document.getElementById('week-tbody').innerHTML=weekRows.join('');
+  const posPlayers=PLAYERS.filter(x=>x.pos===p.pos&&SESS[x.id]&&SESS[x.id].length);
+  if(posPlayers.length>1){
+    const posAvgF=k=>{const all=posPlayers.flatMap(x=>SESS[x.id]);return all.length?Math.round(all.reduce((a,s)=>a+(s[k]||0),0)/all.length):null;};
+    const mySS=SESS[id]||[];const myA=k=>mySS.length?Math.round(mySS.reduce((a,s)=>a+(s[k]||0),0)/mySS.length):null;
+    document.getElementById('pos-avg-content').innerHTML=`
+      <div style="font-size:11px;color:var(--t2);margin-bottom:10px">${p.name} vs ${p.pos} position average (${posPlayers.length} players)</div>
+      <table class="tbl"><thead><tr><th>Metric</th><th>${p.name}</th><th>Position avg</th><th>Difference</th><th>Status</th></tr></thead><tbody>
+      ${['td','hsr','hmld','acc','dec','spr'].map(k=>{
+        const nm=NORMS[k];const my=myA(k);const pos=posAvgF(k);const diff=my&&pos?Math.round(my-pos):null;
+        return`<tr><td>${nm?nm.label:k}</td><td style="color:${my?valHex(k,my):'var(--t3)'}">${my??'—'} ${nm?nm.unit:''}</td><td>${pos??'—'} ${nm?nm.unit:''}</td><td style="color:${diff!==null?(diff>0?'var(--gn)':'var(--rd)'):'var(--t2)'}">${diff!==null?(diff>0?'+':'')+diff:'—'}</td><td>${my&&pos?`<span class="pill ${my>=pos?'pg':'pa'}">${my>=pos?'Above avg':'Below avg'}</span>`:'—'}</td></tr>`;
+      }).join('')}
+      </tbody></table>`;
+  } else {
+    document.getElementById('pos-avg-content').innerHTML='<div style="color:var(--t4);font-size:11px">Need multiple players in the same position for comparison.</div>';
+  }
+}
+
+// ============================================================
+// AI IMPORT
+// ============================================================
+function dragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('drag')}
+function dragLeave(){document.getElementById('upload-zone').classList.remove('drag')}
+function dropFile(e){e.preventDefault();dragLeave();const f=e.dataTransfer.files[0];if(f)processFile(f);}
+function handleFile(e){const f=e.target.files[0];if(f)processFile(f);}
+function processFile(f){
+  if(!f.type.startsWith('image/')){alert('Please upload an image file (PNG, JPG, WEBP).');return;}
+  const r=new FileReader();
+  r.onload=ev=>{b64=ev.target.result.split(',')[1];mime=f.type;document.getElementById('prev-img').src=ev.target.result;document.getElementById('prev-wrap').style.display='block';document.getElementById('fname').textContent=f.name;document.getElementById('ai-btn').disabled=false;};
+  r.readAsDataURL(f);
+}
+function clearFile(){b64=null;mime=null;document.getElementById('prev-wrap').style.display='none';document.getElementById('file-in').value='';document.getElementById('ai-btn').disabled=true;}
+
+function buildPrompt(ctx){
+  return`You are an elite sport scientist analysing GPS performance data from a professional S&C dashboard. Analyse all visible metrics and provide:
+
+1. EXTRACTED METRICS — every GPS metric visible with value and unit (TD, HSR, SPR, HMLD, Acc, Dec, Max Speed, Player Load, Duration, RPE etc.)
+
+2. LOAD ANALYSIS
+   • HSR as % of TD (elite match benchmark: 10–12%)
+   • HMLD as % of TD (benchmark: 18–22%)
+   • Sprint % of HSR
+   • Intensity index (HMLD/TD × 100)
+   • Acc:Dec ratio
+
+3. ELITE BENCHMARKS COMPARISON — compare to professional norms:
+   Match: ~10–12km TD · ~1,200m HSR · ~400m SPR · ~2,000m HMLD · 40–60 Acc/Dec
+   Training: typically 65–75% of match values
+
+4. SPORT SCIENCE COMMENTARY — 4–5 elite-level bullet points. Flag anything notable.
+
+5. 48–72 HOUR RECOMMENDATIONS — 3 specific, actionable coaching decisions.
+
+${ctx?'Additional context: '+ctx:''}
+
+Be precise and clinically useful.`;
+}
+
+async function doAnalyse(){
+  if(!b64)return;
+  document.getElementById('ai-out').textContent='Analysing screenshot...';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mime,data:b64}},{type:'text',text:buildPrompt(document.getElementById('ai-ctx').value)}]}]})});
+    const d=await res.json();
+    const txt=d.content?.map(c=>c.text||'').join('\n')||'No response received.';
+    document.getElementById('ai-out').textContent=txt;
+    parseExtracted(txt);
+  }catch(e){document.getElementById('ai-out').textContent='Error: '+e.message+'\n\nNote: The AI import feature requires an internet connection to access the Claude API.';}
+}
+
+async function doAnalyseText(){
+  const text=document.getElementById('paste-area').value.trim();
+  if(!text){alert('Paste some GPS data first.');return;}
+  document.getElementById('ai-out').textContent='Analysing data...';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:buildPrompt('Data to analyse:\n'+text)}]})});
+    const d=await res.json();
+    const txt=d.content?.map(c=>c.text||'').join('\n')||'No response.';
+    document.getElementById('ai-out').textContent=txt;
+    parseExtracted(txt);
+  }catch(e){document.getElementById('ai-out').textContent='Error: '+e.message;}
+}
+
+function parseExtracted(text){
+  const patterns=[
+    {k:'td',id:'ex-td',rx:/total\s*dist[a-z]*[\s:\-]+([0-9,]+)/i},
+    {k:'hsr',id:'ex-hsr',rx:/(?:HSR|high.speed\s*run)[a-z]*[\s:\-]+([0-9,]+)/i},
+    {k:'spr',id:'ex-spr',rx:/(?:sprint|SPR)\s*(?:dist)?[\s:\-]+([0-9,]+)/i},
+    {k:'hmld',id:'ex-hmld',rx:/(?:HMLD|high\s*metabolic)[a-z]*[\s:\-]+([0-9,]+)/i},
+    {k:'acc',id:'ex-acc',rx:/accel[a-z]*[\s:\-]+([0-9]+)/i},
+    {k:'dec',id:'ex-dec',rx:/decel[a-z]*[\s:\-]+([0-9]+)/i},
+    {k:'spd',id:'ex-spd',rx:/(?:max|peak)\s*speed[\s:\-]+([0-9.]+)/i},
+    {k:'pl',id:'ex-pl',rx:/player\s*load[\s:\-]+([0-9.]+)/i},
+    {k:'dur',id:'ex-dur',rx:/(?:duration|time)[\s:\-]+([0-9]+)\s*min/i}
+  ];
+  exData={};
+  patterns.forEach(({k,id,rx})=>{const m=text.match(rx);if(m){const v=m[1].replace(/,/g,'');exData[k]=v;const el=document.getElementById(id);if(el)el.textContent=k==='td'?parseInt(v).toLocaleString():parseFloat(v);}});
+}
+
+function logExtracted(){
+  const pid=parseFloat(document.getElementById('log-to').value);
+  const p=PLAYERS.find(x=>x.id===pid);
+  if(!p){alert('Select a player to log to.');return;}
+  if(!exData.td){alert('No metrics extracted yet. Analyse a screenshot or paste data first.');return;}
+  addS(pid,new Date().toISOString().split('T')[0],'AI import',parseFloat(exData.td)||null,parseFloat(exData.hsr)||null,parseFloat(exData.spr)||null,parseFloat(exData.hmld)||null,parseFloat(exData.acc)||null,parseFloat(exData.dec)||null,parseFloat(exData.spd)||null,parseFloat(exData.pl)||null,null,parseFloat(exData.dur)||null);
+  renderAll();toast('Session logged to '+p.name);
+}
+
+// ============================================================
+// MANAGER REPORT
+// ============================================================
+function genReport(){
+  const type=document.getElementById('rp-type').value;
+  const selId=parseFloat(document.getElementById('rp-sel').value);
+  const team=document.getElementById('rp-team').value||'Performance Report';
+  const today=new Date();today.setHours(0,0,0,0);
+  const dateStr=new Date().toLocaleDateString('en-IE',{day:'numeric',month:'long',year:'numeric'});
+
+  if(type==='squad'){
+    const flagItems=[];
+    PLAYERS.forEach(p=>{const a=calcACWR(p.id);if(!a||!a.ratio)return;const r=a.ratio;
+      if(r>1.5)flagItems.push({cls:'red',t:`${p.name}: ACWR ${r.toFixed(2)} — injury risk zone. Immediate load reduction recommended.`});
+      else if(r>1.3)flagItems.push({cls:'amber',t:`${p.name}: ACWR ${r.toFixed(2)} — caution. Avoid high-intensity sessions this week.`});
+    });
+    let html=`<div class="report-box">
+      <div class="rb-header"><div><div class="rb-title">${team}</div><div class="rb-sub">Weekly GPS squad report — ${dateStr}</div></div><div class="rb-logo">GPS Analytics · Elite S&C</div></div>
+      <div class="rb-section"><div class="rb-sh">Executive summary</div>
+      <p class="rb-p">This report covers GPS performance data for all <strong>${PLAYERS.length} tracked players</strong> in the current week. Data includes external load metrics, high-intensity running demands, and ACWR workload ratios.</p>
+      ${flagItems.length?flagItems.map(f=>`<div class="rb-flag ${f.cls}">⚠ ${f.t}</div>`).join(''):'<div class="rb-flag green">✓ All players within optimal ACWR range (0.8–1.3). No load concerns this week.</div>'}
+      </div>
+      <div class="rb-section"><div class="rb-sh">Squad GPS summary</div>
+      <table class="rb-tbl"><thead><tr><th>Player</th><th>Position</th><th>Sessions</th><th>Total TD</th><th>Avg HSR</th><th>Avg HMLD</th><th>ACWR</th><th>Status</th></tr></thead><tbody>`;
+    PLAYERS.forEach(p=>{
+      const ss=SESS[p.id]||[];const tw=ss.filter(s=>s.date&&(today-new Date(s.date))/864e5<=7);
+      const twTD=tw.reduce((a,s)=>a+(s.td||0),0);
+      const avgHSR=tw.length?Math.round(tw.reduce((a,s)=>a+(s.hsr||0),0)/tw.length):null;
+      const avgHMLD=tw.length?Math.round(tw.reduce((a,s)=>a+(s.hmld||0),0)/tw.length):null;
+      const a=calcACWR(p.id);const r=a?a.ratio:null;
+      html+=`<tr><td><strong>${p.name}</strong></td><td>${p.pos}</td><td>${tw.length}</td><td>${twTD?twTD.toLocaleString():'—'}</td><td>${avgHSR??'—'}</td><td>${avgHMLD??'—'}</td><td><strong>${r?r.toFixed(2):'—'}</strong></td><td>${!r?'—':r>1.5?'⚠ Risk':r>1.3?'! Caution':'✓ OK'}</td></tr>`;
+    });
+    html+=`</tbody></table></div>
+    <div class="rb-section"><div class="rb-sh">Recommendations</div>
+    <p class="rb-p">1. <strong>Load management:</strong> Monitor ACWR weekly. Keep all players in the 0.8–1.3 optimal zone throughout the block.</p>
+    <p class="rb-p">2. <strong>Training:Match ratio:</strong> Target 3:1 to 4:1 TD in training relative to match output each week.</p>
+    <p class="rb-p">3. <strong>High-intensity exposure:</strong> Ensure HSR and sprint volume in training meets match demands periodically (HSR benchmark: 10–12% of TD).</p>
+    </div>
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid #eee;font-size:10px;color:#999;text-align:center">Prepared by S&C Department · ${dateStr} · Confidential</div></div>`;
+    document.getElementById('report-out').innerHTML=html;
+  } else {
+    const p=selId?PLAYERS.find(x=>x.id===selId):PLAYERS[0];
+    if(!p){document.getElementById('report-out').innerHTML='<div style="color:var(--t4);font-size:12px;text-align:center;padding:20px">Select a player or switch to squad report.</div>';return;}
+    const ss=SESS[p.id]||[];
+    const tw=ss.filter(s=>s.date&&(today-new Date(s.date))/864e5<=7);
+    const lw=ss.filter(s=>{if(!s.date)return false;const d=(today-new Date(s.date))/864e5;return d>7&&d<=14;});
+    const twTD=tw.reduce((a,s)=>a+(s.td||0),0);
+    const lwTD=lw.reduce((a,s)=>a+(s.td||0),0);
+    const wow=lwTD>0?Math.round(((twTD-lwTD)/lwTD)*100):null;
+    const twA=k=>tw.length?Math.round(tw.reduce((a,s)=>a+(s[k]||0),0)/tw.length):null;
+    const a=calcACWR(p.id);const r=a?a.ratio:null;
+    const mTD=tw.filter(s=>s.type==='Match').reduce((a,s)=>a+(s.td||0),0);
+    const tTD=tw.filter(s=>s.type!=='Match').reduce((a,s)=>a+(s.td||0),0);
+    const tm=mTD>0?Math.round((tTD/mTD)*10)/10:null;
+    const acwrStatus=!r?'insufficient data':r<0.8?'under-trained (ACWR below 0.8)':r<=1.3?'optimal (ACWR 0.8–1.3)':r<=1.5?'caution (ACWR 1.3–1.5)':'injury risk zone (ACWR above 1.5)';
+    const summary=!tw.length?`${p.name} had no recorded GPS sessions this week.`:`${p.name} completed ${tw.length} session${tw.length!==1?'s':''} this week, covering a total of ${twTD.toLocaleString()}m. `+(wow!==null?`This is a ${Math.abs(wow)}% ${wow>0?'increase':'decrease'} on last week. `:'')+(r?`Workload ratio (ACWR) is ${r.toFixed(2)}, indicating ${acwrStatus}.`:'');
+    const flags=[];
+    if(r&&r>1.5)flags.push({cls:'red',t:'ACWR >1.5: injury risk zone. Immediate load reduction. Active recovery sessions only until ACWR returns below 1.3.'});
+    else if(r&&r>1.3)flags.push({cls:'amber',t:'ACWR 1.3–1.5: caution zone. Avoid additional high-intensity work this week.'});
+    else if(r&&r<0.8)flags.push({cls:'amber',t:'ACWR <0.8: under-trained. Consider a progressive load increase over the next 1–2 weeks.'});
+    if(wow&&wow>20)flags.push({cls:'red',t:`Weekly load spike: +${wow}% vs prior week. Exceeds the recommended 10–15% safe increase threshold.`});
+    let html=`<div class="report-box">
+      <div class="rb-header"><div><div class="rb-title">${team} — Player Report</div><div class="rb-sub">${p.name} · ${p.pos}${p.num?' · #'+p.num:''} · ${dateStr}</div></div><div class="rb-logo">GPS Analytics · Elite S&C</div></div>
+      <div class="rb-section"><div class="rb-sh">Weekly summary</div><p class="rb-p">${summary}</p>
+      <div class="rb-grid">
+        <div class="rb-stat ${twA('td')&&twA('td')>=10000?'good':twA('td')&&twA('td')>=8000?'warn':'bad'}"><div class="rb-sl">Avg TD/session</div><div class="rb-sv">${twA('td')??'—'}m</div><div class="rb-ss">norm 8.5–12.5km</div></div>
+        <div class="rb-stat ${twA('hsr')&&twA('hsr')>=900?'good':twA('hsr')&&twA('hsr')>=600?'warn':'bad'}"><div class="rb-sl">Avg HSR/session</div><div class="rb-sv">${twA('hsr')??'—'}m</div><div class="rb-ss">norm 600–1,400m</div></div>
+        <div class="rb-stat ${twA('hmld')&&twA('hmld')>=1800?'good':twA('hmld')&&twA('hmld')>=1200?'warn':'bad'}"><div class="rb-sl">Avg HMLD/session</div><div class="rb-sv">${twA('hmld')??'—'}m</div><div class="rb-ss">norm 1.2–2.4km</div></div>
+        <div class="rb-stat ${r&&r<=1.3&&r>=0.8?'good':r&&r>1.5?'bad':'warn'}"><div class="rb-sl">ACWR</div><div class="rb-sv">${r?r.toFixed(2):'—'}</div><div class="rb-ss">optimal 0.8–1.3</div></div>
+        <div class="rb-stat"><div class="rb-sl">Sessions</div><div class="rb-sv">${tw.length}</div><div class="rb-ss">this week</div></div>
+        <div class="rb-stat ${tm&&tm>=3&&tm<=4?'good':'warn'}"><div class="rb-sl">T:M ratio</div><div class="rb-sv">${tm?tm+':1':'—'}</div><div class="rb-ss">target 3:1–4:1</div></div>
+      </div></div>`;
+    if(tw.length){
+      html+=`<div class="rb-section"><div class="rb-sh">Session detail</div><table class="rb-tbl"><thead><tr><th>Date</th><th>Type</th><th>TD (m)</th><th>HSR (m)</th><th>HMLD (m)</th><th>Acc</th><th>Dec</th><th>Max km/h</th><th>RPE</th></tr></thead><tbody>`;
+      [...tw].sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(s=>{html+=`<tr><td>${s.date}</td><td>${s.type||'—'}</td><td>${s.td?s.td.toLocaleString():'—'}</td><td>${s.hsr||'—'}</td><td>${s.hmld||'—'}</td><td>${s.acc||'—'}</td><td>${s.dec||'—'}</td><td>${s.spd||'—'}</td><td>${s.rpe||'—'}</td></tr>`;});
+      html+=`</tbody></table></div>`;
+    }
+    if(flags.length){html+=`<div class="rb-section"><div class="rb-sh">Flags and alerts</div>`;flags.forEach(f=>{html+=`<div class="rb-flag ${f.cls}">⚠ ${f.t}</div>`;});html+=`</div>`;}
+    html+=`<div class="rb-section"><div class="rb-sh">S&C recommendations</div>`;
+    if(!r){html+=`<p class="rb-p">1. Insufficient load data. Ensure GPS is captured at all training sessions to enable ACWR calculation.</p>`;}
+    else if(r>1.5){html+=`<p class="rb-p">1. <strong>Immediate load reduction.</strong> Active recovery sessions only for the next 72 hours. No high-intensity work until ACWR returns to below 1.3.</p><p class="rb-p">2. <strong>Daily monitoring.</strong> Check wellbeing and fatigue markers each morning. Consider HRV tracking.</p><p class="rb-p">3. <strong>Next session:</strong> Low-intensity technical work only, RPE ≤5. Cap total distance at 60% of normal training output.</p>`;}
+    else if(r>1.3){html+=`<p class="rb-p">1. <strong>Reduce intensity</strong> in the next session. Cap RPE at 6 and limit high-speed running efforts.</p><p class="rb-p">2. <strong>Recovery priority:</strong> Sleep, nutrition and hydration protocols over the next 48 hours.</p>`;}
+    else{html+=`<p class="rb-p">1. <strong>Continue current prescription.</strong> Load and intensity within optimal parameters. Maintain the progressive approach.</p><p class="rb-p">2. <strong>High-intensity exposure:</strong> Ensure HSR and sprint volumes in training sessions meet or approach match-equivalent demands periodically.</p>`;}
+    html+=`</div><div style="margin-top:20px;padding-top:14px;border-top:1px solid #eee;font-size:10px;color:#999;text-align:center">Prepared by S&C Department · ${dateStr} · Confidential — not for distribution</div></div>`;
+    document.getElementById('report-out').innerHTML=html;
+  }
+}
+
+function printReport(){
+  const content=document.getElementById('report-out').innerHTML;
+  if(!content||content.trim()===''){alert('Generate a report first.');return;}
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>GPS Report</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#fff;padding:20px;color:#111}.report-box{max-width:800px;margin:0 auto}.rb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #e63946}.rb-title{font-size:18px;font-weight:bold;color:#0d1b2a}.rb-sub{font-size:11px;color:#666;margin-top:2px}.rb-logo{font-size:11px;font-weight:bold;color:#e63946}.rb-section{margin-bottom:18px}.rb-sh{font-size:11px;font-weight:bold;color:#e63946;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid #f0f0f0}.rb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}.rb-stat{background:#f8f9fa;border-radius:7px;padding:10px 12px;border-left:3px solid #e63946}.rb-stat.good{border-left-color:#00b050}.rb-stat.warn{border-left-color:#ff9900}.rb-stat.bad{border-left-color:#e63946}.rb-sl{font-size:9px;color:#666;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px}.rb-sv{font-size:18px;font-weight:bold;color:#0d1b2a}.rb-ss{font-size:10px;color:#888;margin-top:2px}.rb-p{font-size:12px;color:#444;line-height:1.65;margin-bottom:8px}.rb-flag{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px}.rb-flag.green{background:#e8f5e9;color:#1b5e20}.rb-flag.amber{background:#fff8e1;color:#e65100}.rb-flag.red{background:#fce4e4;color:#b71c1c}.rb-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}.rb-tbl th{background:#f0f0f0;padding:7px 9px;text-align:left;color:#444;font-size:9px;letter-spacing:.5px;text-transform:uppercase}.rb-tbl td{padding:7px 9px;border-bottom:1px solid #f5f5f5;color:#333}.rb-tbl tr:last-child td{border-bottom:none}@media print{body{padding:0;margin:0}}</style></head><body>${content}</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),600);
+}
+
+// ============================================================
+// SEED DEMO DATA
+// ============================================================
+function seed(){
+  const pl=[
+    {n:'Ciarán Walsh',num:7,pos:'Central midfielder',mas:16.8,mss:33.2,mref:11200},
+    {n:'Seán Murphy',num:3,pos:'Centre-back',mas:15.4,mss:30.8,mref:9400},
+    {n:'Roisín Kelly',num:11,pos:'Winger',mas:16.2,mss:32.6,mref:10800},
+    {n:'Darragh Quinn',num:9,pos:'Striker',mas:15.9,mss:32.0,mref:10200},
+    {n:'Niall Byrne',num:6,pos:'Defensive midfielder',mas:16.5,mss:31.4,mref:10600},
+    {n:'Aaron Doherty',num:4,pos:'Full-back',mas:15.1,mss:30.2,mref:9100},
+    {n:'Caoimhe Lynch',num:10,pos:'Attacking midfielder',mas:16.0,mss:32.8,mref:10900},
+    {n:'Tomás Ó Briain',num:2,pos:'Wing-back',mas:16.3,mss:31.8,mref:10400}
+  ];
+  const ids=pl.map(p=>addP(p.n,p.num,p.pos,p.mas,p.mss,p.mref,''));
+  const data=[
+    [0,'Match',dA(5),11240,1310,480,2180,52,49,33.2,910,8,90],
+    [0,'MD-3 high load',dA(3),8100,820,290,1620,41,38,31.8,720,7,75],
+    [0,'MD-2 technical',dA(1),6200,540,160,1180,32,29,29.4,540,6,65],
+    [0,'Match',dA(12),10980,1240,420,2050,48,45,32.9,880,8,90],
+    [0,'MD-4 high load',dA(10),8340,880,310,1700,44,42,31.2,740,7,80],
+    [0,'MD-3 high load',dA(8),7950,790,270,1580,39,36,30.8,710,7,70],
+    [0,'MD-1 activation',dA(6),4200,320,90,820,22,20,28.1,380,5,45],
+    [0,'Match',dA(19),11100,1280,450,2100,50,47,33.0,895,8,90],
+    [0,'MD-4 high load',dA(17),8500,900,330,1740,46,43,31.5,760,7,82],
+    [0,'MD-2 technical',dA(15),6100,510,150,1140,30,28,29.0,530,6,60],
+    [0,'Match',dA(26),10800,1190,400,2020,47,44,32.7,870,8,90],
+    [0,'MD-3 high load',dA(24),8000,810,280,1610,40,38,31.0,715,7,72],
+    [1,'Match',dA(5),9380,920,280,1820,38,36,30.8,780,7,90],
+    [1,'MD-3 high load',dA(3),6900,640,190,1380,32,30,29.2,610,6,75],
+    [1,'MD-2 technical',dA(1),5300,420,110,1020,25,24,27.6,460,5,60],
+    [1,'Match',dA(12),9200,890,260,1780,36,34,30.5,760,7,90],
+    [1,'MD-4 high load',dA(10),7100,680,210,1420,34,32,28.9,630,6,78],
+    [1,'Match',dA(19),9450,940,295,1850,39,37,30.9,785,7,90],
+    [1,'MD-3 high load',dA(17),6950,650,195,1390,33,31,29.1,615,6,74],
+    [1,'Match',dA(26),9310,910,270,1800,37,35,30.6,770,7,90],
+    [2,'Match',dA(5),10800,1380,520,2140,55,51,34.1,895,8,90],
+    [2,'MD-3 high load',dA(3),7800,880,310,1640,43,40,32.4,710,7,74],
+    [2,'MD-2 technical',dA(1),5900,590,180,1160,33,30,30.2,520,6,62],
+    [2,'Match',dA(12),10950,1420,540,2180,57,53,34.4,910,9,90],
+    [2,'MD-4 high load',dA(10),8100,920,340,1690,46,43,32.8,735,7,80],
+    [2,'Match',dA(19),10700,1360,510,2110,54,50,33.9,880,8,90],
+    [2,'Match',dA(26),11000,1410,530,2160,56,52,34.2,900,8,90],
+    [3,'Match',dA(5),10100,1180,420,1980,50,47,32.4,850,8,90],
+    [3,'MD-3 high load',dA(3),7500,780,270,1560,40,37,30.9,680,7,72],
+    [3,'MD-5 recovery',dA(1),3800,240,60,680,18,16,26.8,310,4,38],
+    [3,'Match',dA(12),10350,1220,440,2020,52,49,32.7,865,8,90],
+    [3,'MD-4 high load',dA(10),7800,820,290,1610,42,39,31.2,705,7,78],
+    [3,'Match',dA(19),10200,1200,430,1990,51,48,32.5,855,8,90],
+    [3,'Match',dA(26),10050,1160,410,1960,49,46,32.2,840,8,90],
+    [4,'Match',dA(5),10600,1120,380,2060,48,45,31.8,870,7,90],
+    [4,'MD-3 high load',dA(3),16200,1840,640,3140,78,74,31.5,1340,9,140],
+    [4,'MD-4 high load',dA(2),14800,1680,580,2880,72,68,31.2,1210,9,130],
+    [4,'Match',dA(12),10400,1090,360,2020,46,43,31.5,855,7,90],
+    [4,'MD-4 high load',dA(10),8000,840,280,1620,43,40,30.8,710,7,80],
+    [4,'Match',dA(19),10500,1100,370,2040,47,44,31.7,860,7,90],
+    [4,'Match',dA(26),10300,1080,355,2010,46,43,31.4,850,7,90],
+    [5,'Match',dA(5),9200,850,240,1760,35,33,29.8,760,6,90],
+    [5,'MD-2 technical',dA(3),5800,460,120,1080,26,24,27.4,490,5,58],
+    [5,'MD-5 recovery',dA(1),3200,180,40,580,14,13,24.9,270,3,32],
+    [5,'Match',dA(12),9050,830,235,1730,34,32,29.6,750,6,90],
+    [5,'Match',dA(19),9180,845,242,1750,35,33,29.7,758,6,90],
+    [5,'Match',dA(26),9100,825,230,1720,34,31,29.5,748,6,90],
+    [6,'Match',dA(5),10900,1290,470,2160,53,50,33.6,900,8,90],
+    [6,'MD-3 high load',dA(3),7900,840,300,1660,42,39,32.1,715,7,76],
+    [6,'MD-2 technical',dA(1),6000,560,165,1150,31,29,30.0,525,6,62],
+    [6,'Match',dA(12),11050,1320,490,2190,54,51,33.8,910,8,90],
+    [6,'MD-4 high load',dA(10),8200,880,320,1700,44,41,32.5,740,7,82],
+    [6,'Match',dA(19),10850,1300,478,2140,53,50,33.5,895,8,90],
+    [6,'Match',dA(26),10750,1280,460,2120,52,49,33.3,885,8,90],
+    [7,'Match',dA(5),10450,1080,360,2030,47,44,31.6,860,7,90],
+    [7,'MD-3 high load',dA(3),7600,760,255,1540,38,36,30.4,685,6,74],
+    [7,'MD-2 technical',dA(1),5700,480,140,1100,28,26,28.2,495,5,58],
+    [7,'Match',dA(12),10280,1060,345,2000,46,43,31.3,845,7,90],
+    [7,'MD-4 high load',dA(10),7800,800,275,1580,40,37,30.6,700,6,78],
+    [7,'Match',dA(19),10500,1090,365,2040,47,44,31.6,858,7,90],
+    [7,'Match',dA(26),10320,1070,350,2010,46,43,31.4,848,7,90]
+  ];
+  data.forEach(([pi,type,date,td,hsr,spr,hmld,acc,dec,spd,pl,rpe,dur])=>{addS(ids[pi],date,type,td,hsr,spr,hmld,acc,dec,spd,pl,rpe,dur);});
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.getElementById('date-display').textContent=new Date().toLocaleDateString('en-IE',{day:'numeric',month:'short',year:'numeric'});
+seed();
+renderAll();
+</script>
+</body>
+</html>
