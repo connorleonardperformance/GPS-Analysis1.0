@@ -185,7 +185,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="dual">
     <div>
       <div class="panel">
-        <div class="ph"><i class="ti ti-users"></i>Roster<div class="ph-r"><button class="btn" onclick="openM('add-player')"><i class="ti ti-plus"></i>Add player</button></div></div>
+        <div class="ph"><i class="ti ti-users"></i>Roster<div class="ph-r"><button class="btn-g" onclick="loadDemoPlayer()" id="demo-btn"><i class="ti ti-user-star"></i>Load demo player</button><button class="btn" onclick="openM('add-player')"><i class="ti ti-plus"></i>Add player</button></div></div>
         <div id="squad-list"></div>
       </div>
     </div>
@@ -740,6 +740,47 @@ function renderSquadTable() {
     else if (r < 0.8) items.push({ c: 'var(--bl)', t: `${p.name} — ACWR ${r.toFixed(2)}: under-trained. Progressive increase recommended.` });
   });
   fl.innerHTML = items.length ? items.map(i => `<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd);align-items:flex-start"><div style="width:6px;height:6px;border-radius:50%;background:${i.c};flex-shrink:0;margin-top:3px"></div><div style="font-size:11px;color:var(--t2);line-height:1.5">${i.t}</div></div>`).join('') : '<div style="color:var(--t4);font-size:11px">All clear — all players within normal ACWR parameters.</div>';
+}
+
+// ============================================================
+// DEMO PLAYER
+// ============================================================
+async function loadDemoPlayer() {
+  const btn = document.getElementById('demo-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Loading…';
+
+  const { data: p, error } = await sb.from('players').insert([{
+    user_id: currentUser.id, name: 'John Doe (test)', num: 99,
+    pos: 'Central midfielder', mas: 16.5, mss: 33.0, mref: 11000, notes: 'Demo player — safe to delete'
+  }]).select().single();
+
+  if (error) { toast('Error: ' + error.message, true); btn.disabled = false; btn.innerHTML = '<i class="ti ti-user-star"></i> Load demo player'; return; }
+
+  const dA = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().split('T')[0]; };
+  const sessions = [
+    [dA(5),  'Match',           11240, 1310, 480, 2180, 52, 49, 33.2, 910, 8, 90],
+    [dA(8),  'MD-1 activation', 4100,  310,  85,  790,  20, 18, 27.8, 360, 5, 42],
+    [dA(10), 'MD-3 high load',  8100,  820,  290, 1620, 41, 38, 31.8, 720, 7, 75],
+    [dA(12), 'MD-4 high load',  7600,  760,  250, 1540, 38, 35, 31.2, 690, 6, 70],
+    [dA(15), 'MD-2 technical',  6200,  540,  160, 1180, 32, 29, 29.4, 540, 6, 65],
+    [dA(19), 'Match',           10980, 1240, 420, 2050, 48, 45, 32.9, 880, 8, 90],
+    [dA(22), 'MD-3 high load',  7950,  790,  270, 1580, 39, 36, 30.8, 710, 7, 72],
+    [dA(24), 'MD-4 high load',  8340,  880,  310, 1700, 44, 42, 31.2, 740, 7, 80],
+    [dA(26), 'Match',           11100, 1280, 450, 2100, 50, 47, 33.0, 895, 8, 90],
+    [dA(29), 'MD-5 recovery',   3800,  240,  60,  680,  18, 16, 26.8, 310, 4, 38],
+    [dA(33), 'Match',           10800, 1190, 400, 2020, 47, 44, 32.7, 870, 8, 90],
+    [dA(36), 'MD-3 high load',  8000,  810,  280, 1610, 40, 38, 31.0, 715, 7, 74],
+    [dA(38), 'MD-4 high load',  16200, 1840, 640, 3140, 78, 74, 31.5, 1340, 9, 140], // spike for ACWR demo
+    [dA(40), 'Match',           10350, 1220, 440, 2020, 52, 49, 32.7, 865, 8, 90],
+  ];
+
+  await sb.from('sessions').insert(sessions.map(([date, type, td, hsr, spr, hmld, acc, dec, spd, pl, rpe, dur]) => ({
+    user_id: currentUser.id, player_id: p.id, date, type, td, hsr, spr, hmld, acc, dec, spd, pl, rpe, dur
+  })));
+
+  await loadData();
+  btn.disabled = false; btn.innerHTML = '<i class="ti ti-user-star"></i> Load demo player';
+  toast('John Doe (test) added — click his name to explore');
 }
 
 // ============================================================
