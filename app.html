@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -151,6 +152,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <button class="ntab" onclick="goP('trends',this)"><i class="ti ti-chart-line"></i>Trends</button>
     <button class="ntab" onclick="goP('avgs',this)"><i class="ti ti-calculator"></i>Session avgs</button>
     <button class="ntab" onclick="goP('ai',this)"><i class="ti ti-sparkles"></i>AI import</button>
+    <button class="ntab" onclick="goP('csv',this)"><i class="ti ti-table-import"></i>CSV import</button>
     <button class="ntab" onclick="goP('report',this)"><i class="ti ti-file-report"></i>Manager report</button>
   </div>
   <div class="user-chip">
@@ -337,6 +339,59 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
           <option>Match</option><option>MD-1 activation</option><option>MD-2 technical</option><option>MD-3 high load</option><option>MD-4 high load</option><option>MD-5 recovery</option><option>AI import</option>
         </select></div>
         <button class="btn" style="width:100%;padding:10px" onclick="logExtracted()"><i class="ti ti-device-floppy"></i>Log extracted data to player</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CSV IMPORT -->
+<div id="page-csv" class="page">
+  <div class="g2">
+    <div>
+      <div class="panel">
+        <div class="ph"><i class="ti ti-table-import"></i>Upload GPS export file<div class="ph-r"><span class="pill pg">STATSports</span><span class="pill pc">Catapult</span><span class="pill pa">Any platform</span></div></div>
+        <div class="hint">Upload a CSV or Excel export from any GPS platform. The importer auto-detects STATSports and Catapult column formats and maps them to your squad.</div>
+        <div class="upload-zone" id="csv-zone" onclick="document.getElementById('csv-file-in').click()" ondragover="dragOver2(event)" ondragleave="dragLeave2(event)" ondrop="dropCSV(event)">
+          <i class="ti ti-file-spreadsheet" style="font-size:32px;color:var(--cy);display:block;margin-bottom:8px"></i>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:4px">Drop CSV or Excel file or click to upload</div>
+          <div style="font-size:10px;color:var(--t3)">.CSV · .XLSX · .XLS · STATSports · Catapult · Any GPS platform</div>
+        </div>
+        <input type="file" id="csv-file-in" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleCSV(event)">
+        <div id="csv-platform-detected" style="display:none;margin-bottom:10px"></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><i class="ti ti-adjustments"></i>Column mapping</div>
+        <div id="csv-mapping-empty" style="color:var(--t4);font-size:11px;text-align:center;padding:20px">Upload a file above to see column mapping.</div>
+        <div id="csv-mapping" style="display:none">
+          <div style="font-size:10px;color:var(--t3);margin-bottom:10px">We auto-detected these columns. Adjust if anything looks wrong.</div>
+          <div id="csv-map-grid"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="panel" style="margin-bottom:11px">
+        <div class="ph"><i class="ti ti-eye"></i>Preview — first 5 rows<div class="ph-r" id="csv-row-count"></div></div>
+        <div id="csv-preview-empty" style="color:var(--t4);font-size:11px;text-align:center;padding:20px">Upload a file to preview data.</div>
+        <div id="csv-preview" style="display:none;overflow-x:auto"></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><i class="ti ti-users"></i>Assign to squad</div>
+        <div class="hint" style="margin-bottom:10px">If your file has a player name column, we'll try to match each row to your squad automatically. You can also assign all rows to one player.</div>
+        <div class="fg">
+          <div class="fl">Override — assign all rows to one player</div>
+          <select class="fsel" id="csv-player-override" style="width:100%">
+            <option value="">Auto-match by name (recommended)</option>
+          </select>
+        </div>
+        <div class="fg">
+          <div class="fl">Session type</div>
+          <select class="fsel" id="csv-sess-type" style="width:100%">
+            <option>Training</option><option>Match</option><option>MD-1 activation</option><option>MD-2 technical</option><option>MD-3 high load</option><option>MD-4 high load</option><option>MD-5 recovery</option>
+          </select>
+        </div>
+        <div id="csv-match-preview" style="margin-bottom:10px"></div>
+        <button class="btn" style="width:100%;padding:11px" id="csv-import-btn" onclick="importCSV()" disabled><i class="ti ti-database-import"></i>Import sessions to squad</button>
+        <div id="csv-result" style="margin-top:10px;font-size:11px;color:var(--gn)"></div>
       </div>
     </div>
   </div>
@@ -621,6 +676,7 @@ function populateSelects() {
   const rp = document.getElementById('rp-sel'); if (rp) { const v = rp.value; rp.innerHTML = '<option value="">Full squad</option>' + PLAYERS.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); rp.value = v; }
   const lt = document.getElementById('log-to'); if (lt) { const v = lt.value; lt.innerHTML = '<option value="">Select player...</option>' + PLAYERS.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); lt.value = v; }
   const lsp = document.getElementById('ls-player'); if (lsp) { const v = lsp.value; lsp.innerHTML = '<option value="">Select player...</option>' + PLAYERS.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); lsp.value = v; }
+  const cpo = document.getElementById('csv-player-override'); if (cpo) { const v = cpo.value; cpo.innerHTML = '<option value="">Auto-match by name (recommended)</option>' + PLAYERS.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); cpo.value = v; }
 }
 
 function renderSquadList() {
@@ -1049,6 +1105,236 @@ function printReport() {
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><title>GPS Report</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#fff;padding:20px;color:#111}.report-box{max-width:800px;margin:0 auto}.rb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #e63946}.rb-title{font-size:18px;font-weight:bold}.rb-sub{font-size:11px;color:#666;margin-top:2px}.rb-logo{font-size:11px;font-weight:bold;color:#e63946}.rb-section{margin-bottom:18px}.rb-sh{font-size:11px;font-weight:bold;color:#e63946;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid #f0f0f0}.rb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}.rb-stat{background:#f8f9fa;border-radius:7px;padding:10px 12px;border-left:3px solid #e63946}.rb-stat.good{border-left-color:#00b050}.rb-stat.warn{border-left-color:#ff9900}.rb-stat.bad{border-left-color:#e63946}.rb-sl{font-size:9px;color:#666;text-transform:uppercase;margin-bottom:3px}.rb-sv{font-size:18px;font-weight:bold}.rb-ss{font-size:10px;color:#888;margin-top:2px}.rb-p{font-size:12px;color:#444;line-height:1.65;margin-bottom:8px}.rb-flag{padding:8px 10px;border-radius:6px;margin-bottom:6px;font-size:12px}.rb-flag.green{background:#e8f5e9;color:#1b5e20}.rb-flag.amber{background:#fff8e1;color:#e65100}.rb-flag.red{background:#fce4e4;color:#b71c1c}.rb-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}.rb-tbl th{background:#f0f0f0;padding:7px 9px;text-align:left;font-size:9px;text-transform:uppercase}.rb-tbl td{padding:7px 9px;border-bottom:1px solid #f5f5f5}@media print{body{padding:0}}</style></head><body>${content}</body></html>`);
   w.document.close(); setTimeout(() => w.print(), 600);
+}
+
+// ============================================================
+// CSV / EXCEL IMPORT
+// ============================================================
+
+// Column name mappings for STATSports, Catapult, and generic GPS exports
+const COL_MAP = {
+  td:   ['total distance','total dist','distance (m)','total distance (m)','distance','dist'],
+  hsr:  ['high speed running','hsr','hsr distance','high speed distance','high-speed running','hsr (m)','high speed running distance'],
+  spr:  ['sprint','sprint distance','spr','sprint dist','sprint distance (m)','sprinting distance'],
+  hmld: ['hmld','high metabolic load distance','high metabolic load','metabolic power distance','hmld (m)'],
+  acc:  ['accelerations','accel','total accelerations','accel count','acceleration count','accel zone count','no. of accelerations','# accelerations'],
+  dec:  ['decelerations','decel','total decelerations','decel count','deceleration count','decel zone count','no. of decelerations','# decelerations'],
+  spd:  ['max speed','maximum speed','peak speed','max velocity','maximum velocity','top speed','max speed (km/h)','peak velocity','max vel'],
+  pl:   ['player load','playerload','load','player load (au)','total load'],
+  rpe:  ['rpe','rate of perceived exertion','session rpe','perceived exertion'],
+  dur:  ['duration','time','session duration','duration (min)','time (min)','total time','elapsed time'],
+  date: ['date','session date','start date','start time','training date'],
+  player: ['player','athlete','name','player name','athlete name','full name','player full name'],
+  type: ['session type','type','activity type','session name','drill name']
+};
+
+let csvRows = [], csvHeaders = [], csvColMap = {}, csvPlatform = '';
+
+function detectPlatform(headers) {
+  const h = headers.map(x => x.toLowerCase());
+  if (h.some(x => x.includes('playerload') || x.includes('player load'))) {
+    if (h.some(x => x.includes('hmld') || x.includes('metabolic'))) return 'Catapult';
+  }
+  if (h.some(x => x.includes('hmld'))) return 'STATSports';
+  if (h.some(x => x.includes('max speed') || x.includes('peak speed'))) return 'Generic GPS';
+  return 'Unknown';
+}
+
+function autoMapColumns(headers) {
+  const map = {};
+  const lh = headers.map(h => h.toLowerCase().trim());
+  Object.entries(COL_MAP).forEach(([field, aliases]) => {
+    // exact match first
+    let idx = lh.findIndex(h => aliases.includes(h));
+    // partial match fallback
+    if (idx === -1) idx = lh.findIndex(h => aliases.some(a => h.includes(a) || a.includes(h)));
+    if (idx !== -1) map[field] = headers[idx];
+  });
+  return map;
+}
+
+function parseDate(val) {
+  if (!val) return null;
+  // Handle Excel serial date numbers
+  if (typeof val === 'number') {
+    const d = new Date((val - 25569) * 86400 * 1000);
+    return d.toISOString().split('T')[0];
+  }
+  const s = String(val).trim();
+  // DD/MM/YYYY
+  const dmy = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+  if (dmy) {
+    const y = dmy[3].length === 2 ? '20' + dmy[3] : dmy[3];
+    return `${y}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+  }
+  // YYYY-MM-DD or ISO
+  const iso = s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+  if (iso) return `${iso[1]}-${iso[2].padStart(2,'0')}-${iso[3].padStart(2,'0')}`;
+  // Try native parse
+  const d = new Date(s);
+  if (!isNaN(d)) return d.toISOString().split('T')[0];
+  return null;
+}
+
+function numVal(row, col) {
+  if (!col || row[col] === undefined || row[col] === '' || row[col] === null) return null;
+  const v = parseFloat(String(row[col]).replace(/,/g, ''));
+  return isNaN(v) ? null : v;
+}
+
+function dragOver2(e) { e.preventDefault(); document.getElementById('csv-zone').classList.add('drag'); }
+function dragLeave2() { document.getElementById('csv-zone').classList.remove('drag'); }
+function dropCSV(e) { e.preventDefault(); dragLeave2(); const f = e.dataTransfer.files[0]; if (f) processCSVFile(f); }
+function handleCSV(e) { const f = e.target.files[0]; if (f) processCSVFile(f); }
+
+function processCSVFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'binary', cellDates: false });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      if (data.length < 2) { alert('File appears empty or has no data rows.'); return; }
+
+      // Find header row (first row with multiple non-empty cells)
+      let headerRowIdx = 0;
+      for (let i = 0; i < Math.min(5, data.length); i++) {
+        if (data[i].filter(c => c !== '').length > 3) { headerRowIdx = i; break; }
+      }
+      csvHeaders = data[headerRowIdx].map(h => String(h).trim()).filter(h => h);
+      csvRows = [];
+      for (let i = headerRowIdx + 1; i < data.length; i++) {
+        if (data[i].every(c => c === '' || c === null)) continue;
+        const row = {};
+        csvHeaders.forEach((h, j) => { row[h] = data[i][j] ?? ''; });
+        csvRows.push(row);
+      }
+
+      csvPlatform = detectPlatform(csvHeaders);
+      csvColMap = autoMapColumns(csvHeaders);
+
+      // Show platform badge
+      const pEl = document.getElementById('csv-platform-detected');
+      pEl.style.display = 'block';
+      pEl.innerHTML = `<div class="hint"><i class="ti ti-check" style="color:var(--gn)"></i> Detected: <strong style="color:var(--cy)">${csvPlatform}</strong> — ${csvRows.length} rows found. ${Object.keys(csvColMap).length} columns auto-mapped.</div>`;
+
+      renderColumnMapping();
+      renderCSVPreview();
+      updateMatchPreview();
+      document.getElementById('csv-import-btn').disabled = false;
+    } catch(err) {
+      alert('Could not read file: ' + err.message);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function renderColumnMapping() {
+  const grid = document.getElementById('csv-map-grid');
+  const fields = ['date','player','td','hsr','spr','hmld','acc','dec','spd','pl','rpe','dur','type'];
+  const labels = {date:'Date',player:'Player name',td:'Total distance (m)',hsr:'HSR (m)',spr:'Sprint (m)',hmld:'HMLD (m)',acc:'Accelerations',dec:'Decelerations',spd:'Max speed (km/h)',pl:'Player load',rpe:'RPE',dur:'Duration (min)',type:'Session type'};
+  grid.innerHTML = fields.map(f => `
+    <div style="display:grid;grid-template-columns:140px 1fr;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="font-size:10px;color:var(--t2)">${labels[f]}</div>
+      <select class="fsel" style="width:100%" id="csvmap-${f}" onchange="csvColMap['${f}']=this.value;renderCSVPreview();updateMatchPreview()">
+        <option value="">— not mapped —</option>
+        ${csvHeaders.map(h => `<option value="${h}" ${csvColMap[f]===h?'selected':''}>${h}</option>`).join('')}
+      </select>
+    </div>`).join('');
+  document.getElementById('csv-mapping-empty').style.display = 'none';
+  document.getElementById('csv-mapping').style.display = 'block';
+}
+
+function renderCSVPreview() {
+  const fields = ['date','player','td','hsr','spr','hmld','acc','dec','spd','pl','rpe','dur'];
+  const labels = {date:'Date',player:'Player',td:'TD (m)',hsr:'HSR (m)',spr:'Sprint',hmld:'HMLD',acc:'Acc',dec:'Dec',spd:'Max km/h',pl:'Player load',rpe:'RPE',dur:'Duration'};
+  const mapped = fields.filter(f => csvColMap[f]);
+  const preview = csvRows.slice(0, 5);
+  const html = `<table class="tbl"><thead><tr>${mapped.map(f=>`<th>${labels[f]}</th>`).join('')}</tr></thead><tbody>
+    ${preview.map(row => `<tr>${mapped.map(f => `<td>${f==='date'?parseDate(row[csvColMap[f]])??row[csvColMap[f]]:row[csvColMap[f]]??'—'}</td>`).join('')}</tr>`).join('')}
+  </tbody></table>`;
+  document.getElementById('csv-preview-empty').style.display = 'none';
+  document.getElementById('csv-preview').style.display = 'block';
+  document.getElementById('csv-preview').innerHTML = html;
+  document.getElementById('csv-row-count').innerHTML = `<span class="pill pc">${csvRows.length} rows</span>`;
+}
+
+function updateMatchPreview() {
+  const override = document.getElementById('csv-player-override').value;
+  if (override || !csvColMap.player) {
+    document.getElementById('csv-match-preview').innerHTML = override
+      ? `<div style="font-size:10px;color:var(--t3)">All ${csvRows.length} rows will be assigned to the selected player.</div>`
+      : `<div style="font-size:10px;color:var(--am)">No player name column mapped — select a player override above.</div>`;
+    return;
+  }
+  // Show match preview
+  const names = [...new Set(csvRows.map(r => String(r[csvColMap.player]||'').trim()).filter(Boolean))];
+  const matched = names.filter(n => PLAYERS.some(p => p.name.toLowerCase().includes(n.toLowerCase()) || n.toLowerCase().includes(p.name.toLowerCase().split(' ')[0])));
+  const unmatched = names.filter(n => !matched.includes(n));
+  document.getElementById('csv-match-preview').innerHTML = `
+    <div style="font-size:10px;color:var(--t3);margin-bottom:6px">Player matching preview:</div>
+    ${matched.map(n => `<div style="font-size:10px;color:var(--gn);margin-bottom:2px"><i class="ti ti-check"></i> ${n} → matched</div>`).join('')}
+    ${unmatched.map(n => `<div style="font-size:10px;color:var(--am);margin-bottom:2px"><i class="ti ti-alert-triangle"></i> ${n} → no match (row will be skipped)</div>`).join('')}`;
+}
+
+async function importCSV() {
+  if (!csvRows.length) return;
+  const override = document.getElementById('csv-player-override').value;
+  const sessType = document.getElementById('csv-sess-type').value;
+  const btn = document.getElementById('csv-import-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Importing…';
+
+  let imported = 0, skipped = 0;
+  const toInsert = [];
+
+  for (const row of csvRows) {
+    let pid = override || null;
+    if (!pid && csvColMap.player) {
+      const name = String(row[csvColMap.player] || '').trim().toLowerCase();
+      const match = PLAYERS.find(p =>
+        p.name.toLowerCase().includes(name.split(' ')[0]) ||
+        name.includes(p.name.toLowerCase().split(' ')[0])
+      );
+      pid = match ? match.id : null;
+    }
+    if (!pid) { skipped++; continue; }
+
+    const date = csvColMap.date ? parseDate(row[csvColMap.date]) : new Date().toISOString().split('T')[0];
+    if (!date) { skipped++; continue; }
+
+    // Convert m/s to km/h for max speed if values look like m/s (< 15)
+    let spd = numVal(row, csvColMap.spd);
+    if (spd && spd < 15) spd = Math.round(spd * 3.6 * 10) / 10;
+
+    toInsert.push({
+      player_id: pid, user_id: currentUser.id, date,
+      type: csvColMap.type ? (row[csvColMap.type] || sessType) : sessType,
+      td: numVal(row, csvColMap.td),
+      hsr: numVal(row, csvColMap.hsr),
+      spr: numVal(row, csvColMap.spr),
+      hmld: numVal(row, csvColMap.hmld),
+      acc: numVal(row, csvColMap.acc),
+      dec: numVal(row, csvColMap.dec),
+      spd, pl: numVal(row, csvColMap.pl),
+      rpe: numVal(row, csvColMap.rpe),
+      dur: numVal(row, csvColMap.dur),
+    });
+    imported++;
+  }
+
+  if (toInsert.length) {
+    // Insert in batches of 50
+    for (let i = 0; i < toInsert.length; i += 50) {
+      await sb.from('sessions').insert(toInsert.slice(i, i + 50));
+    }
+    await loadData();
+  }
+
+  btn.disabled = false; btn.innerHTML = '<i class="ti ti-database-import"></i> Import sessions to squad';
+  document.getElementById('csv-result').innerHTML =
+    `<span style="color:var(--gn)"><i class="ti ti-check"></i> ${imported} sessions imported successfully.</span>` +
+    (skipped ? `<span style="color:var(--am);margin-left:10px"><i class="ti ti-alert-triangle"></i> ${skipped} rows skipped (no player match).</span>` : '');
+  toast(`${imported} sessions imported`);
 }
 
 // ============================================================
