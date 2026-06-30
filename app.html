@@ -134,9 +134,47 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .user-chip{display:flex;align-items:center;gap:7px;padding:0 4px}
 .user-name{font-size:11px;color:var(--t2)}
 @media(max-width:700px){.dual{grid-template-columns:1fr}.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}.krow{grid-template-columns:repeat(2,1fr)}}
-
-/* Log session modal */
 .session-modal .g3{grid-template-columns:1fr 1fr 1fr}
+
+/* Time range buttons */
+.time-btn{background:var(--bg4);border:1px solid var(--bd2);border-radius:6px;padding:5px 12px;font-size:11px;color:var(--t3);cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
+.time-btn.active{background:var(--cy-bg);color:var(--cy);border-color:var(--cy-bd)}
+.time-btn:hover:not(.active){color:var(--t2)}
+
+/* Player header bar */
+.player-header-bar{background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ph-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0}
+.ph-name{font-size:17px;font-weight:600;color:#fff;margin-bottom:2px}
+.ph-pos{font-size:11px;color:var(--t3)}
+.ph-stats{display:flex;gap:20px;margin-left:auto;flex-wrap:wrap}
+.ph-stat{text-align:center}
+.ph-stat-v{font-size:20px;font-weight:600;color:var(--cy);line-height:1}
+.ph-stat-l{font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+/* ACWR status card */
+.acwr-status-card{border-radius:12px;padding:20px 24px;margin-bottom:14px;display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.acwr-big-num{font-size:60px;font-weight:700;line-height:1;flex-shrink:0;min-width:120px}
+.acwr-info{flex:1;min-width:200px}
+.acwr-headline{font-size:16px;font-weight:600;margin-bottom:6px}
+.acwr-explain{font-size:12px;line-height:1.7;opacity:.9;margin-bottom:10px}
+.acwr-rec{font-size:11px;padding:9px 13px;border-radius:8px;background:rgba(0,0,0,.25);line-height:1.6;font-weight:500}
+.acwr-meters{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.acwr-m{font-size:11px;opacity:.8}
+
+/* Big metric cards */
+.metrics-section-label{font-size:10px;font-weight:600;color:var(--cy);letter-spacing:1px;text-transform:uppercase;margin:18px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--bd2);display:flex;align-items:center;gap:6px}
+.big-metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:11px;margin-bottom:4px}
+.big-metric{background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:16px;position:relative;overflow:hidden;transition:border-color .2s}
+.big-metric:hover{border-color:var(--bd2)}
+.bm-accent{position:absolute;top:0;left:0;width:100%;height:3px;border-radius:12px 12px 0 0}
+.bm-title{font-size:12px;font-weight:600;color:#fff;margin-bottom:2px;margin-top:4px}
+.bm-sub{font-size:10px;color:var(--t3);margin-bottom:11px;line-height:1.4}
+.bm-value{font-size:30px;font-weight:700;line-height:1;margin-bottom:10px}
+.bm-bar-wrap{height:6px;border-radius:3px;background:var(--bd);margin-bottom:8px;overflow:hidden}
+.bm-bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.bm-range{font-size:9px;color:var(--t4);line-height:1.5}
+.bm-badge{position:absolute;top:14px;right:14px}
+.status-great{color:#00e676}.status-good{color:#00e676}.status-caution{color:#ffab00}.status-high{color:#ffab00}.status-low{color:#448aff}.status-risk{color:#ff4757}.status-none{color:var(--t4)}
 </style>
 </head>
 <body>
@@ -204,62 +242,71 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <!-- PLAYER METRICS -->
 <div id="page-player" class="page">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-    <select class="fsel" id="pm-sel" onchange="loadPlayerMetrics()" style="min-width:160px"><option value="">Select player...</option></select>
-    <select class="fsel" id="pm-week" onchange="loadPlayerMetrics()">
-      <option value="7">This week</option><option value="14">Last 2 weeks</option><option value="28">Last 28 days</option><option value="0">All sessions</option>
-    </select>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <select class="fsel" id="pm-sel" onchange="loadPlayerMetrics()" style="min-width:180px"><option value="">Select player...</option></select>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      <button class="time-btn active" onclick="setPMWindow(7,this)">This week</button>
+      <button class="time-btn" onclick="setPMWindow(14,this)">2 weeks</button>
+      <button class="time-btn" onclick="setPMWindow(28,this)">4 weeks</button>
+      <button class="time-btn" onclick="setPMWindow(0,this)">All time</button>
+    </div>
     <button class="btn" onclick="openLogSession()" style="margin-left:auto"><i class="ti ti-plus"></i>Log session</button>
-    <span style="font-size:11px;color:var(--t3)">
-      <span style="color:var(--gn)">■</span> within norm &nbsp;
-      <span style="color:var(--am)">■</span> caution &nbsp;
-      <span style="color:var(--rd)">■</span> outside norm
-    </span>
   </div>
-  <div id="pm-empty" style="color:var(--t4);text-align:center;padding:40px;font-size:12px">Select a player above to view colour-coded metrics.</div>
+  <div id="pm-empty" style="color:var(--t4);text-align:center;padding:60px;font-size:13px">
+    <i class="ti ti-user-circle" style="font-size:48px;display:block;margin-bottom:14px;opacity:.3"></i>
+    Select a player above to view their performance metrics
+  </div>
   <div id="pm-content" style="display:none">
-    <div class="sep">External load</div>
-    <div class="g3" id="pm-load-cards"></div>
-    <div class="sep">High intensity running</div>
-    <div class="g3" id="pm-hi-cards"></div>
-    <div class="sep">Mechanical load</div>
-    <div class="g3" id="pm-mech-cards"></div>
-    <div class="sep">Workload ratios</div>
-    <div class="g3" id="pm-ratio-cards"></div>
-    <div class="sep" style="margin-top:14px">Session history</div>
-    <div class="panel"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Type</th><th>TD (m)</th><th>HSR (m)</th><th>Sprint (m)</th><th>HMLD (m)</th><th>Acc</th><th>Dec</th><th>Max km/h</th><th>Player load</th><th>RPE</th><th>Duration</th><th></th></tr></thead><tbody id="sess-tbody"></tbody></table></div></div>
+    <div id="pm-player-header"></div>
+    <div id="pm-acwr-section"></div>
+    <div id="pm-metrics-section"></div>
+    <div id="pm-history-section"></div>
   </div>
 </div>
 
 <!-- TRENDS -->
 <div id="page-trends" class="page">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-    <select class="fsel" id="tr-sel" onchange="loadTrends()" style="min-width:160px"><option value="">Select player...</option></select>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <select class="fsel" id="tr-sel" onchange="loadTrends()" style="min-width:180px"><option value="">Select player...</option></select>
     <select class="fsel" id="tr-metric" onchange="loadTrends()">
-      <option value="td">Total distance (TD)</option>
-      <option value="hsr">HSR</option>
-      <option value="spr">Sprint distance</option>
-      <option value="hmld">HMLD</option>
-      <option value="acc">Accelerations</option>
-      <option value="dec">Decelerations</option>
-      <option value="spd">Max speed</option>
-      <option value="pl">Player load</option>
+      <option value="td">Total Distance — how far they ran</option>
+      <option value="hsr">High Speed Running — fast running</option>
+      <option value="spr">Sprint Distance — full speed efforts</option>
+      <option value="hmld">High Intensity Work (HMLD)</option>
+      <option value="acc">Explosive Actions — accelerations</option>
+      <option value="dec">Braking Actions — decelerations</option>
+      <option value="spd">Top Speed — fastest recorded</option>
+      <option value="pl">Body Stress Score — player load</option>
+      <option value="rpe">Effort Rating — RPE (1–10)</option>
     </select>
-    <span style="font-size:10px;color:var(--t3)">8-week rolling weekly averages · bars = last 10 sessions</span>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      <button class="time-btn active" onclick="setTRWindow(14,this)">2 weeks</button>
+      <button class="time-btn" onclick="setTRWindow(28,this)">4 weeks</button>
+      <button class="time-btn" onclick="setTRWindow(56,this)">8 weeks</button>
+      <button class="time-btn" onclick="setTRWindow(90,this)">3 months</button>
+      <button class="time-btn" onclick="setTRWindow(180,this)">6 months</button>
+      <button class="time-btn" onclick="setTRWindow(0,this)">All time</button>
+    </div>
   </div>
-  <div id="tr-empty" style="color:var(--t4);text-align:center;padding:40px;font-size:12px">Select a player and metric to view trend charts.</div>
+  <div id="tr-empty" style="color:var(--t4);text-align:center;padding:60px;font-size:13px">
+    <i class="ti ti-chart-line" style="font-size:48px;display:block;margin-bottom:14px;opacity:.3"></i>
+    Select a player and metric to view their trend
+  </div>
   <div id="tr-content" style="display:none">
-    <div class="panel">
-      <div class="ph"><i class="ti ti-chart-line"></i><span id="tr-title">Weekly trend</span><div class="ph-r"><span id="tr-badge" class="pill pgr"></span></div></div>
-      <div class="chart-wrap" style="height:220px"><canvas id="trend-chart"></canvas></div>
+    <div class="panel" style="margin-bottom:12px">
+      <div class="ph">
+        <i class="ti ti-chart-line"></i><span id="tr-title">Trend</span>
+        <div class="ph-r"><span id="tr-badge" class="pill pgr"></span><span id="tr-change" style="font-size:10px;color:var(--t3)"></span></div>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="trend-chart"></canvas></div>
     </div>
     <div class="g2">
       <div class="panel">
-        <div class="ph"><i class="ti ti-chart-bar"></i>Session-by-session (last 10)</div>
-        <div class="chart-wrap" style="height:180px"><canvas id="session-chart"></canvas></div>
+        <div class="ph"><i class="ti ti-chart-dots"></i>Session by session</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="session-chart"></canvas></div>
       </div>
       <div class="panel">
-        <div class="ph"><i class="ti ti-math"></i>Trend stats</div>
+        <div class="ph"><i class="ti ti-math"></i>Summary</div>
         <div id="trend-stats"></div>
       </div>
     </div>
@@ -834,84 +881,299 @@ async function delSession(id) {
 }
 
 // ============================================================
-// PLAYER METRICS
+// PLAYER METRICS — redesigned
 // ============================================================
+let pmDays = 7;
+function setPMWindow(days, el) {
+  pmDays = days;
+  document.querySelectorAll('#page-player .time-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  loadPlayerMetrics();
+}
+
+const METRIC_INFO = {
+  td:      { title:'Total Distance',         sub:'How far did they run in total?',                          unit:'m',    fmt: v=>Math.round(v).toLocaleString() },
+  hsr:     { title:'High Speed Running',     sub:'Distance running fast — above ~19 km/h',                 unit:'m',    fmt: v=>Math.round(v).toLocaleString() },
+  spr:     { title:'Sprint Distance',        sub:'Distance at full sprint — above ~25 km/h',               unit:'m',    fmt: v=>Math.round(v).toLocaleString() },
+  hmld:    { title:'High Intensity Work',    sub:'Distance covered at very high physical effort (HMLD)',   unit:'m',    fmt: v=>Math.round(v).toLocaleString() },
+  acc:     { title:'Explosive Actions',      sub:'Number of hard bursts of acceleration',                  unit:'',     fmt: v=>Math.round(v) },
+  dec:     { title:'Braking Actions',        sub:'Number of sharp slowdowns and stops',                    unit:'',     fmt: v=>Math.round(v) },
+  spd:     { title:'Top Speed',             sub:'Fastest speed recorded this period',                     unit:'km/h', fmt: v=>v.toFixed(1) },
+  pl:      { title:'Body Stress Score',      sub:'Overall physical demand placed on the body (Player Load)',unit:'AU',  fmt: v=>Math.round(v).toLocaleString() },
+  hsr_pct: { title:'Intensity %',           sub:'What % of their running was at high speed?',             unit:'%',    fmt: v=>v.toFixed(1) },
+  hmld_pct:{ title:'High Effort %',         sub:'What % of their running was at very high effort?',       unit:'%',    fmt: v=>v.toFixed(1) },
+  acc_dec: { title:'Acceleration Balance',  sub:'Balance between explosive actions and braking (ideal: ~1.0)', unit:'', fmt: v=>v.toFixed(2) },
+};
+
+function bigMetricCard(key, val, norm_key) {
+  const info = METRIC_INFO[key];
+  const n = NORMS[norm_key || key];
+  if (!info) return '';
+  const hasVal = val !== null && val !== undefined;
+  const col = hasVal ? valColor(norm_key || key, val) : 'var(--t4)';
+  const hex = hasVal ? valHex(norm_key || key, val) : '#4a6278';
+  const label = hasVal ? valLabel(norm_key || key, val) : 'No data';
+  const pillCls = hasVal ? valPill(norm_key || key, val) : 'pgr';
+  const pct = hasVal && n ? Math.min(100, (val / n.elite) * 100) : 0;
+  const display = hasVal ? info.fmt(val) + (info.unit ? ' <span style="font-size:14px;font-weight:400;color:var(--t3)">' + info.unit + '</span>' : '') : '—';
+  return `<div class="big-metric">
+    <div class="bm-accent" style="background:${hex}"></div>
+    <div class="bm-badge"><span class="pill ${pillCls}" style="font-size:9px">${label}</span></div>
+    <div class="bm-title">${info.title}</div>
+    <div class="bm-sub">${info.sub}</div>
+    <div class="bm-value" style="color:${col}">${display}</div>
+    ${n ? `<div class="bm-bar-wrap"><div class="bm-bar-fill" style="width:${pct.toFixed(1)}%;background:${hex}"></div></div>
+    <div class="bm-range">${n.desc}</div>` : ''}
+  </div>`;
+}
+
+function acwrStatusInfo(r) {
+  if (r === null) return { color:'var(--t3)', bg:'var(--bg4)', border:'var(--bd2)', icon:'ti-help-circle', headline:'No data yet', explain:'Log at least a few sessions to calculate this player\'s workload balance.', rec:'Start logging GPS sessions to unlock injury risk monitoring.' };
+  if (r < 0.8)  return { color:'var(--bl)', bg:'#448aff08', border:'#448aff30', icon:'ti-arrow-down-circle', headline:'Under-Trained', explain:'This player has done less training than usual recently. Their body may not be prepared for high-intensity match demands, which can actually increase injury risk.', rec:'Gradually increase training load over the next 1–2 weeks. Don\'t jump straight to full intensity.' };
+  if (r <= 1.3) return { color:'var(--gn)', bg:'#00e67608', border:'#00e67630', icon:'ti-circle-check', headline:'Optimal — Ready to Train', explain:'This player\'s recent work is well-balanced with their 4-week average. They are fit, prepared, and at low risk of injury.', rec:'Full training load is fine. This player can handle high-intensity sessions and match demands.' };
+  if (r <= 1.5) return { color:'var(--am)', bg:'#ffab0008', border:'#ffab0030', icon:'ti-alert-triangle', headline:'High Workload — Monitor', explain:'This player has trained significantly more than usual recently. They may be carrying fatigue. Watch for signs of tiredness or niggles.', rec:'Avoid adding extra high-intensity work this week. Prioritise sleep and recovery nutrition.' };
+  return { color:'var(--rd)', bg:'#ff475708', border:'#ff475730', icon:'ti-alert-octagon', headline:'Overloaded — Injury Risk', explain:'Warning: This player\'s recent training far exceeds their normal level. Research shows this zone significantly increases soft tissue injury risk.', rec:'Light session or rest only. No high-intensity work until ACWR drops below 1.3.' };
+}
+
 function loadPlayerMetrics() {
   const id = document.getElementById('pm-sel').value;
-  const days = parseInt(document.getElementById('pm-week').value) || 9999;
   const p = PLAYERS.find(x => x.id == id);
   if (!p) { document.getElementById('pm-empty').style.display = ''; document.getElementById('pm-content').style.display = 'none'; return; }
   document.getElementById('pm-empty').style.display = 'none'; document.getElementById('pm-content').style.display = 'block';
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const ss = (SESS[id] || []).filter(s => !days || !s.date || (today - new Date(s.date)) / 864e5 <= days);
-  const n = ss.length;
-  const avg = k => n ? Math.round(ss.reduce((a, s) => a + (s[k] || 0), 0) / n) : null;
-  const aT = avg('td'), aH = avg('hsr'), aS = avg('spr'), aHM = avg('hmld'), aA = avg('acc'), aD = avg('dec'),
-    aSp = ss.length ? Math.round(Math.max(...ss.map(s => s.spd || 0)) * 10) / 10 : null, aP = avg('pl');
-  const hPct = aT && aH ? Math.round((aH / aT) * 100) : null;
-  const hmPct = aT && aHM ? Math.round((aHM / aT) * 100) : null;
-  const adR = aA && aD ? Math.round((aA / aD) * 100) / 100 : null;
-  const acwr = calcACWR(id);
-  document.getElementById('pm-load-cards').innerHTML = metricCard('td', aT, n) + metricCard('pl', aP, n) + metricCard('spd', aSp, n);
-  document.getElementById('pm-hi-cards').innerHTML = metricCard('hsr', aH, n) + metricCard('spr', aS, n) + metricCard('hmld', aHM, n);
-  document.getElementById('pm-mech-cards').innerHTML = metricCard('acc', aA, n) + metricCard('dec', aD, n) + metricCard('hsr_pct', hPct, n);
-  document.getElementById('pm-ratio-cards').innerHTML = metricCard('acwr', acwr ? acwr.ratio : null, n) + metricCard('hmld_pct', hmPct, n) + metricCard('acc_dec', adR, n);
 
-  // Session history table
-  const all = (SESS[id] || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date));
-  document.getElementById('sess-tbody').innerHTML = all.length
-    ? all.map(s => `<tr>
-        <td>${s.date}</td><td>${s.type || '—'}</td>
-        <td style="color:${s.td ? valHex('td', s.td) : 'var(--t2)'}">${s.td ? s.td.toLocaleString() : '—'}</td>
-        <td>${s.hsr || '—'}</td><td>${s.spr || '—'}</td><td>${s.hmld || '—'}</td>
-        <td>${s.acc || '—'}</td><td>${s.dec || '—'}</td><td>${s.spd || '—'}</td>
-        <td>${s.pl || '—'}</td><td>${s.rpe || '—'}</td><td>${s.dur ? s.dur + ' min' : '—'}</td>
-        <td><button class="del-btn" onclick="delSession('${s.id}')" title="Delete"><i class="ti ti-trash"></i></button></td>
-      </tr>`).join('')
-    : '<tr><td colspan="13" style="text-align:center;color:var(--t4);padding:18px">No sessions logged yet.</td></tr>';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const all = (SESS[id] || []).slice().sort((a,b) => new Date(b.date)-new Date(a.date));
+  const ss = pmDays ? all.filter(s => !s.date || (today - new Date(s.date))/864e5 <= pmDays) : all;
+  const n = ss.length;
+  const avg = k => n ? ss.reduce((a,s) => a+(s[k]||0), 0)/n : null;
+
+  const aT=avg('td'), aH=avg('hsr'), aS=avg('spr'), aHM=avg('hmld'),
+        aA=avg('acc'), aD=avg('dec'),
+        aSp=n?Math.max(...ss.map(s=>s.spd||0)):null, aP=avg('pl');
+  const hPct  = aT&&aH  ? (aH/aT)*100  : null;
+  const hmPct = aT&&aHM ? (aHM/aT)*100 : null;
+  const adR   = aA&&aD  ? aA/aD        : null;
+  const acwr  = calcACWR(id);
+  const r     = acwr?.ratio ?? null;
+
+  // ── Player header ──────────────────────────────────────────
+  const lastSess = all[0];
+  const daysSince = lastSess ? Math.round((today - new Date(lastSess.date))/864e5) : null;
+  document.getElementById('pm-player-header').innerHTML = `
+    <div class="player-header-bar">
+      <div class="ph-avatar ${p.av}">${p.ini}</div>
+      <div>
+        <div class="ph-name">${p.name}</div>
+        <div class="ph-pos">${p.pos}${p.num?' · #'+p.num:''}</div>
+      </div>
+      <div class="ph-stats">
+        <div class="ph-stat"><div class="ph-stat-v">${all.length}</div><div class="ph-stat-l">Total sessions</div></div>
+        <div class="ph-stat"><div class="ph-stat-v">${n}</div><div class="ph-stat-l">This period</div></div>
+        ${aSp?`<div class="ph-stat"><div class="ph-stat-v" style="color:var(--rd)">${aSp.toFixed(1)}</div><div class="ph-stat-l">Top speed km/h</div></div>`:''}
+        ${daysSince!==null?`<div class="ph-stat"><div class="ph-stat-v" style="color:var(--am)">${daysSince}</div><div class="ph-stat-l">Days since last</div></div>`:''}
+      </div>
+    </div>`;
+
+  // ── ACWR card ──────────────────────────────────────────────
+  const si = acwrStatusInfo(r);
+  document.getElementById('pm-acwr-section').innerHTML = `
+    <div class="acwr-status-card" style="background:${si.bg};border:1px solid ${si.border}">
+      <div>
+        <div style="font-size:11px;color:${si.color};letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-bottom:4px">Injury Risk Score</div>
+        <div class="acwr-big-num" style="color:${si.color}">${r!==null?r.toFixed(2):'—'}</div>
+        ${acwr?`<div class="acwr-meters" style="color:${si.color}">
+          <div class="acwr-m">7-day load: <strong>${acwr.acute.toLocaleString()}m</strong></div>
+          <div class="acwr-m">4-week avg: <strong>${acwr.chronic.toLocaleString()}m</strong></div>
+        </div>`:''}
+      </div>
+      <div class="acwr-info">
+        <div class="acwr-headline" style="color:${si.color}"><i class="ti ${si.icon}"></i> ${si.headline}</div>
+        <div class="acwr-explain" style="color:${si.color}">${si.explain}</div>
+        <div class="acwr-rec" style="color:${si.color}"><i class="ti ti-bulb"></i> <strong>This week:</strong> ${si.rec}</div>
+      </div>
+    </div>`;
+
+  // ── Metric cards ───────────────────────────────────────────
+  document.getElementById('pm-metrics-section').innerHTML = `
+    <div class="metrics-section-label"><i class="ti ti-run"></i> Running Output</div>
+    <div class="big-metric-grid">
+      ${bigMetricCard('td',aT)}
+      ${bigMetricCard('hsr',aH)}
+      ${bigMetricCard('spr',aS)}
+      ${bigMetricCard('hmld',aHM)}
+    </div>
+    <div class="metrics-section-label"><i class="ti ti-bolt"></i> Explosive & Braking</div>
+    <div class="big-metric-grid">
+      ${bigMetricCard('acc',aA)}
+      ${bigMetricCard('dec',aD)}
+      ${bigMetricCard('acc_dec',adR)}
+    </div>
+    <div class="metrics-section-label"><i class="ti ti-chart-pie"></i> Intensity Breakdown</div>
+    <div class="big-metric-grid">
+      ${bigMetricCard('hsr_pct',hPct,'hsr_pct')}
+      ${bigMetricCard('hmld_pct',hmPct,'hmld_pct')}
+      ${bigMetricCard('pl',aP)}
+    </div>`;
+
+  // ── Session history ─────────────────────────────────────────
+  document.getElementById('pm-history-section').innerHTML = `
+    <div class="metrics-section-label" style="margin-top:20px"><i class="ti ti-calendar-stats"></i> Session History</div>
+    <div class="panel"><div style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Date</th><th>Type</th><th>Total Dist</th><th>Fast Running</th><th>Sprint</th><th>Hi Intensity</th><th>Explosive</th><th>Braking</th><th>Top Speed</th><th>Body Stress</th><th>Effort</th><th>Duration</th><th></th></tr></thead>
+      <tbody>${all.length ? all.map(s=>`<tr>
+        <td>${s.date}</td>
+        <td><span class="pill pgr" style="font-size:9px">${s.type||'—'}</span></td>
+        <td style="color:${s.td?valHex('td',s.td):'var(--t2)'};font-weight:500">${s.td?s.td.toLocaleString()+'m':'—'}</td>
+        <td style="color:${s.hsr?valHex('hsr',s.hsr):'var(--t2)'}">${s.hsr?s.hsr+'m':'—'}</td>
+        <td>${s.spr?s.spr+'m':'—'}</td>
+        <td style="color:${s.hmld?valHex('hmld',s.hmld):'var(--t2)'}">${s.hmld?s.hmld+'m':'—'}</td>
+        <td>${s.acc||'—'}</td><td>${s.dec||'—'}</td>
+        <td style="color:var(--rd)">${s.spd?s.spd+' km/h':'—'}</td>
+        <td>${s.pl||'—'}</td>
+        <td>${s.rpe?`<span class="pill ${s.rpe>=8?'pr':s.rpe>=6?'pa':'pg'}">${s.rpe}/10</span>`:'—'}</td>
+        <td>${s.dur?s.dur+' min':'—'}</td>
+        <td><button class="del-btn" onclick="delSession('${s.id}')" title="Delete session"><i class="ti ti-trash"></i></button></td>
+      </tr>`).join('') : '<tr><td colspan="13" style="text-align:center;color:var(--t4);padding:24px">No sessions logged yet for this period.</td></tr>'}</tbody>
+    </table></div></div>`;
 }
 
 // ============================================================
-// TRENDS
+// TRENDS — redesigned
 // ============================================================
+let trDays = 14;
+function setTRWindow(days, el) {
+  trDays = days;
+  document.querySelectorAll('#page-trends .time-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  loadTrends();
+}
+
+const TR_LABELS = {
+  td:'Total Distance', hsr:'High Speed Running', spr:'Sprint Distance',
+  hmld:'High Intensity Work', acc:'Explosive Actions', dec:'Braking Actions',
+  spd:'Top Speed', pl:'Body Stress Score', rpe:'Effort Rating (RPE)'
+};
+
 function loadTrends() {
   const id = document.getElementById('tr-sel').value;
   const metric = document.getElementById('tr-metric').value;
   const p = PLAYERS.find(x => x.id == id);
-  if (!p || !metric) { document.getElementById('tr-empty').style.display = ''; document.getElementById('tr-content').style.display = 'none'; return; }
-  document.getElementById('tr-empty').style.display = 'none'; document.getElementById('tr-content').style.display = 'block';
-  const ss = SESS[id] || []; const today = new Date(); today.setHours(0, 0, 0, 0);
+  if (!p || !metric) { document.getElementById('tr-empty').style.display=''; document.getElementById('tr-content').style.display='none'; return; }
+  document.getElementById('tr-empty').style.display='none'; document.getElementById('tr-content').style.display='block';
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const allSess = (SESS[id]||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const filtered = trDays ? allSess.filter(s=>s.date&&(today-new Date(s.date))/864e5<=trDays) : allSess;
   const n = NORMS[metric];
-  document.getElementById('tr-title').textContent = p.name + ' — ' + (n ? n.label : metric) + ' trend';
-  const weeks = [], wLabels = [];
-  for (let w = 7; w >= 0; w--) {
-    const wE = new Date(today); wE.setDate(wE.getDate() - w * 7);
-    const wS = new Date(wE); wS.setDate(wS.getDate() - 6);
-    const wSS = ss.filter(s => { if (!s.date) return false; const d = new Date(s.date); return d >= wS && d <= wE; });
-    const val = wSS.length ? (metric === 'spd' ? Math.max(...wSS.map(s => s.spd || 0)) : Math.round(wSS.reduce((a, s) => a + (s[metric] || 0), 0) / wSS.length)) : null;
-    weeks.push(val); wLabels.push('W-' + w);
+  const label = TR_LABELS[metric] || metric;
+
+  document.getElementById('tr-title').textContent = p.name + ' — ' + label;
+
+  // Session-by-session line chart (main chart)
+  const sessVals = filtered.map(s => s[metric]||null);
+  const sessLabels = filtered.map(s => s.date ? s.date.slice(5).replace('-','/') : '?');
+
+  // Add norm reference lines if available
+  const datasets = [{
+    label,
+    data: sessVals,
+    borderColor: '#00d4ff',
+    backgroundColor: '#00d4ff10',
+    borderWidth: 2.5,
+    pointBackgroundColor: sessVals.map(v => v!==null ? valHex(metric,v) : '#4a6278'),
+    pointRadius: sessVals.length > 30 ? 3 : 5,
+    pointBorderColor: '#080c10',
+    pointBorderWidth: 1.5,
+    tension: 0.35,
+    fill: true,
+    spanGaps: true
+  }];
+
+  if (n) {
+    datasets.push({ label:'Target min', data: filtered.map(()=>n.ok), borderColor:'#00e67640', borderWidth:1, borderDash:[4,4], pointRadius:0, fill:false });
+    datasets.push({ label:'Target max', data: filtered.map(()=>n.high), borderColor:'#ffab0040', borderWidth:1, borderDash:[4,4], pointRadius:0, fill:false });
   }
+
   if (trendChart) trendChart.destroy();
-  const tCtx = document.getElementById('trend-chart').getContext('2d');
-  trendChart = new Chart(tCtx, { type: 'line', data: { labels: wLabels, datasets: [{ label: n ? n.label : metric, data: weeks, borderColor: '#00d4ff', backgroundColor: '#00d4ff18', borderWidth: 2, pointBackgroundColor: weeks.map(v => v !== null ? valHex(metric, v) : '#4a6278'), pointRadius: 5, pointBorderColor: '#080c10', pointBorderWidth: 2, tension: 0.3, fill: true, spanGaps: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${n ? n.label : metric}: ${c.parsed.y !== null ? c.parsed.y.toLocaleString() + ' ' + (n ? n.unit : '') : '-'}` } } }, scales: { x: { ticks: { color: '#4a6278', font: { size: 10 } }, grid: { color: '#1e2830' } }, y: { ticks: { color: '#4a6278', font: { size: 10 }, callback: v => v.toLocaleString() }, grid: { color: '#1e2830' } } } } });
-  const latest = weeks.filter(v => v !== null).slice(-1)[0];
-  if (latest !== undefined && latest !== null) { const b = document.getElementById('tr-badge'); b.className = 'pill ' + valPill(metric, latest); b.textContent = latest.toLocaleString() + ' ' + (n ? n.unit : ''); }
-  const recent = [...ss].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10).reverse();
+  trendChart = new Chart(document.getElementById('trend-chart').getContext('2d'), {
+    type: 'line',
+    data: { labels: sessLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: n?true:false, labels:{ color:'#4a6278', font:{size:10}, boxWidth:20, filter: i=>i.datasetIndex===0||i.text!==label } },
+        tooltip: { callbacks: { label: c => c.datasetIndex===0 ? `${label}: ${c.parsed.y!==null?c.parsed.y.toLocaleString()+' '+(n?n.unit:''):'-'}` : c.dataset.label } }
+      },
+      scales: {
+        x: { ticks:{ color:'#4a6278', font:{size:9}, maxRotation:45, maxTicksLimit:12 }, grid:{color:'#1e2830'} },
+        y: { ticks:{ color:'#4a6278', font:{size:10}, callback: v=>v.toLocaleString() }, grid:{color:'#1e2830'} }
+      }
+    }
+  });
+
+  // Badge — latest value
+  const latest = sessVals.filter(v=>v!==null).slice(-1)[0];
+  if (latest!=null) { const b=document.getElementById('tr-badge'); b.className='pill '+valPill(metric,latest); b.textContent=latest.toLocaleString()+' '+(n?n.unit:''); }
+
+  // Week-on-week change
+  const prev = sessVals.filter(v=>v!==null).slice(-4,-1);
+  const prevAvg = prev.length ? prev.reduce((a,v)=>a+v,0)/prev.length : null;
+  const chEl = document.getElementById('tr-change');
+  if (latest!=null && prevAvg!=null) {
+    const pct = Math.round(((latest-prevAvg)/prevAvg)*100);
+    chEl.textContent = (pct>0?'↑ +':'↓ ')+pct+'% vs prior avg';
+    chEl.style.color = pct>15?'var(--rd)':pct>0?'var(--gn)':'var(--am)';
+  } else { chEl.textContent=''; }
+
+  // Session-by-session mini chart (bottom left) — last 15 sessions
+  const recent15 = allSess.slice(-15);
   if (sessChart) sessChart.destroy();
-  const sCtx = document.getElementById('session-chart').getContext('2d');
-  sessChart = new Chart(sCtx, { type: 'line', data: { labels: recent.map(s => s.date ? s.date.slice(5) : '?'), datasets: [{ label: n ? n.label : metric, data: recent.map(s => s[metric] || null), borderColor: '#00d4ff', backgroundColor: '#00d4ff12', borderWidth: 2, pointBackgroundColor: recent.map(s => valHex(metric, s[metric] || 0)), pointRadius: 5, pointBorderColor: '#080c10', pointBorderWidth: 2, tension: 0.3, fill: true, spanGaps: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${n ? n.label : metric}: ${c.parsed.y !== null ? c.parsed.y.toLocaleString() + ' ' + (n ? n.unit : '') : '-'}` } } }, scales: { x: { ticks: { color: '#4a6278', font: { size: 9 }, maxRotation: 45 }, grid: { color: '#1e2830' } }, y: { ticks: { color: '#4a6278', font: { size: 9 } }, grid: { color: '#1e2830' } } } } });
-  const vals = recent.map(s => s[metric] || 0).filter(v => v > 0);
-  const mn = vals.length ? Math.round(vals.reduce((a, v) => a + v, 0) / vals.length) : null;
-  const mx = vals.length ? Math.round(Math.max(...vals)) : null;
-  const lo = vals.length ? Math.round(Math.min(...vals)) : null;
+  sessChart = new Chart(document.getElementById('session-chart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: recent15.map(s=>s.date?s.date.slice(5).replace('-','/'):'?'),
+      datasets: [{ label, data: recent15.map(s=>s[metric]||null),
+        borderColor:'#00d4ff', backgroundColor:'#00d4ff12', borderWidth:2,
+        pointBackgroundColor: recent15.map(s=>valHex(metric,s[metric]||0)),
+        pointRadius:4, pointBorderColor:'#080c10', pointBorderWidth:1.5,
+        tension:0.3, fill:true, spanGaps:true }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>`${c.parsed.y?.toLocaleString()} ${n?n.unit:''}`}} },
+      scales:{
+        x:{ticks:{color:'#4a6278',font:{size:9},maxRotation:45,maxTicksLimit:8},grid:{color:'#1e2830'}},
+        y:{ticks:{color:'#4a6278',font:{size:9}},grid:{color:'#1e2830'}}
+      }
+    }
+  });
+
+  // Summary stats
+  const vals = filtered.map(s=>s[metric]||0).filter(v=>v>0);
+  const avg  = vals.length ? Math.round(vals.reduce((a,v)=>a+v,0)/vals.length) : null;
+  const peak = vals.length ? Math.round(Math.max(...vals)) : null;
+  const low  = vals.length ? Math.round(Math.min(...vals)) : null;
+  const unit = n?n.unit:'';
   document.getElementById('trend-stats').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div style="background:var(--bg4);border-radius:7px;padding:9px 11px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">Average (last 10)</div><div style="font-size:18px;font-weight:500;color:${mn ? valHex(metric, mn) : 'var(--t3)'}">${mn ?? '—'} ${n ? n.unit : ''}</div></div>
-      <div style="background:var(--bg4);border-radius:7px;padding:9px 11px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">Peak</div><div style="font-size:18px;font-weight:500;color:${mx ? valHex(metric, mx) : 'var(--t3)'}">${mx ?? '—'} ${n ? n.unit : ''}</div></div>
-      <div style="background:var(--bg4);border-radius:7px;padding:9px 11px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">Low</div><div style="font-size:18px;font-weight:500;color:var(--t2)">${lo ?? '—'} ${n ? n.unit : ''}</div></div>
-      <div style="background:var(--bg4);border-radius:7px;padding:9px 11px"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">Total sessions</div><div style="font-size:18px;font-weight:500;color:var(--cy)">${ss.length}</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="background:var(--bg4);border-radius:9px;padding:12px">
+        <div style="font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Average</div>
+        <div style="font-size:22px;font-weight:600;color:${avg?valHex(metric,avg):'var(--t3)'}">${avg?.toLocaleString()??'—'}<span style="font-size:11px;color:var(--t4);margin-left:3px">${unit}</span></div>
+      </div>
+      <div style="background:var(--bg4);border-radius:9px;padding:12px">
+        <div style="font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Peak</div>
+        <div style="font-size:22px;font-weight:600;color:${peak?valHex(metric,peak):'var(--t3)'}">${peak?.toLocaleString()??'—'}<span style="font-size:11px;color:var(--t4);margin-left:3px">${unit}</span></div>
+      </div>
+      <div style="background:var(--bg4);border-radius:9px;padding:12px">
+        <div style="font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Lowest</div>
+        <div style="font-size:22px;font-weight:600;color:var(--t2)">${low?.toLocaleString()??'—'}<span style="font-size:11px;color:var(--t4);margin-left:3px">${unit}</span></div>
+      </div>
+      <div style="background:var(--bg4);border-radius:9px;padding:12px">
+        <div style="font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Sessions</div>
+        <div style="font-size:22px;font-weight:600;color:var(--cy)">${filtered.length}</div>
+      </div>
     </div>
-    ${n ? `<div style="font-size:10px;color:var(--t3);margin-top:10px;padding:8px;background:var(--bg4);border-radius:6px;border-left:2px solid var(--cy)">${n.desc}</div>` : ''}`;
+    ${n?`<div style="font-size:11px;color:var(--t3);padding:10px 12px;background:var(--bg4);border-radius:8px;border-left:3px solid var(--cy);line-height:1.6"><strong style="color:var(--cy)">What's normal?</strong><br>${n.desc}</div>`:''}`;
 }
 
 // ============================================================
