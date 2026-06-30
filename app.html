@@ -215,6 +215,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 <!-- SQUAD -->
 <div id="page-squad" class="page active">
+  <div id="squad-filter-bar" style="display:none;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:10px 14px">
+    <i class="ti ti-filter" style="color:var(--cy);font-size:14px"></i>
+    <span style="font-size:10px;color:var(--t3);letter-spacing:.6px;text-transform:uppercase">Filter by</span>
+    <select class="fsel" id="filter-club" onchange="setFilterClub(this.value)" style="min-width:150px">
+      <option value="">All clubs</option>
+    </select>
+    <select class="fsel" id="filter-team" onchange="setFilterTeam(this.value)" style="min-width:150px">
+      <option value="">All teams</option>
+    </select>
+    <span id="filter-count" style="font-size:10px;color:var(--t3);margin-left:4px"></span>
+    <button class="btn-g" onclick="setFilterClub('');document.getElementById('filter-club').value=''" style="padding:4px 9px;font-size:10px;margin-left:auto">Clear filter</button>
+  </div>
   <div class="krow">
     <div class="kpi"><div class="ka" style="background:var(--cy)"></div><div class="kl">Squad</div><div class="kv" id="ksz">0</div><div class="ks">players</div></div>
     <div class="kpi"><div class="ka" style="background:var(--gn)"></div><div class="kl">Sessions</div><div class="kv" id="kse">—</div><div class="ks">this week</div></div>
@@ -473,6 +485,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="fg"><div class="fl">Full name</div><input class="fi" id="np-name" placeholder="e.g. Ciarán Walsh"></div>
       <div class="fg"><div class="fl">Squad number</div><input class="fi" id="np-num" type="number" placeholder="7"></div>
     </div>
+    <div class="g2">
+      <div class="fg"><div class="fl">Club</div><input class="fi" id="np-club" placeholder="e.g. Longford Town" list="club-list"><datalist id="club-list"></datalist></div>
+      <div class="fg"><div class="fl">Team</div><input class="fi" id="np-team" placeholder="e.g. Mens First Team" list="team-list"><datalist id="team-list"></datalist></div>
+    </div>
     <div class="fg"><div class="fl">Position</div>
       <select class="fsel" id="np-pos" style="width:100%">
         <option>Goalkeeper</option><option>Centre-back</option><option>Full-back</option><option>Wing-back</option>
@@ -534,6 +550,48 @@ let PLAYERS = [], SESS = {};
 let trendChart = null, sessChart = null, b64 = null, mime = null, exData = {};
 const AVC = ['avc','avg','ava','avr','avp','avb'];
 let avI = 0;
+let filterClub = '', filterTeam = '';
+
+function getFilteredPlayers() {
+  return PLAYERS.filter(p => {
+    if (filterClub && p.club !== filterClub) return false;
+    if (filterTeam && p.team !== filterTeam) return false;
+    return true;
+  });
+}
+
+function populateClubFilter() {
+  const el = document.getElementById('filter-club'); if (!el) return;
+  const clubs = [...new Set(PLAYERS.map(p => p.club).filter(Boolean))].sort();
+  const cur = filterClub;
+  el.innerHTML = '<option value="">All clubs</option>' + clubs.map(c => `<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+function populateTeamFilter() {
+  const el = document.getElementById('filter-team'); if (!el) return;
+  const teams = [...new Set(PLAYERS.filter(p => !filterClub || p.club === filterClub).map(p => p.team).filter(Boolean))].sort();
+  const cur = filterTeam;
+  el.innerHTML = '<option value="">All teams</option>' + teams.map(t => `<option value="${t}"${t===cur?' selected':''}>${t}</option>`).join('');
+  el.value = cur;
+}
+
+function setFilterClub(club) {
+  filterClub = club; filterTeam = '';
+  populateTeamFilter();
+  renderAll();
+}
+
+function setFilterTeam(team) {
+  filterTeam = team;
+  renderAll();
+}
+
+function populatePlayerModalDataLists() {
+  const clubs = [...new Set(PLAYERS.map(p => p.club).filter(Boolean))].sort();
+  document.getElementById('club-list').innerHTML = clubs.map(c => `<option value="${c}">`).join('');
+  const teams = [...new Set(PLAYERS.map(p => p.team).filter(Boolean))].sort();
+  document.getElementById('team-list').innerHTML = teams.map(t => `<option value="${t}">`).join('');
+}
 
 const NORMS = {
   td:{label:'Total distance',unit:'m',low:8500,ok:10000,high:12500,elite:13000,desc:'Match: 10–12km · Training MD3/4: 7–9km'},
@@ -631,7 +689,10 @@ function goP(id, el) {
   el.classList.add('active');
 }
 
-function openM(id) { document.getElementById(id + '-modal').classList.add('open'); }
+function openM(id) {
+  document.getElementById(id + '-modal').classList.add('open');
+  if (id === 'add-player') populatePlayerModalDataLists();
+}
 function closeM(id) { document.getElementById(id + '-modal').classList.remove('open'); }
 
 function valColor(key, val) {
@@ -688,6 +749,8 @@ async function savePlayer() {
     const playerData = {
       name, num: parseInt(document.getElementById('np-num').value) || null,
       pos: document.getElementById('np-pos').value,
+      club: document.getElementById('np-club').value.trim() || null,
+      team: document.getElementById('np-team').value.trim() || null,
       mas: parseFloat(document.getElementById('np-mas').value) || null,
       mss: parseFloat(document.getElementById('np-mss').value) || null,
       mref: parseFloat(document.getElementById('np-mref').value) || null,
@@ -696,7 +759,7 @@ async function savePlayer() {
     await savePlayerToDb(playerData);
     await loadData();
     closeM('add-player');
-    ['np-name', 'np-num', 'np-mas', 'np-mss', 'np-mref', 'np-notes'].forEach(i => document.getElementById(i).value = '');
+    ['np-name', 'np-num', 'np-club', 'np-team', 'np-mas', 'np-mss', 'np-mref', 'np-notes'].forEach(i => document.getElementById(i).value = '');
     toast(name + ' added to squad');
   } catch (e) { toast('Error: ' + e.message, true); }
   btn.disabled = false; btn.textContent = 'Save player';
@@ -711,6 +774,13 @@ async function delP(e, id) {
 }
 
 function renderAll() {
+  const hasClubs = PLAYERS.some(p => p.club);
+  const fb = document.getElementById('squad-filter-bar');
+  fb.style.display = hasClubs ? 'flex' : 'none';
+  if (hasClubs) { populateClubFilter(); populateTeamFilter(); }
+  const fp = getFilteredPlayers();
+  const fc = document.getElementById('filter-count');
+  if (fc) fc.textContent = (filterClub||filterTeam) ? `Showing ${fp.length} of ${PLAYERS.length} players` : '';
   renderSquadList(); renderSquadTable(); populateSelects();
   document.getElementById('squad-badge').textContent = PLAYERS.length + ' player' + (PLAYERS.length !== 1 ? 's' : '');
   document.getElementById('ksz').textContent = PLAYERS.length;
@@ -731,11 +801,13 @@ function populateSelects() {
 
 function renderSquadList() {
   const el = document.getElementById('squad-list');
+  const fp = getFilteredPlayers();
   if (!PLAYERS.length) { el.innerHTML = '<div style="color:var(--t4);font-size:11px;text-align:center;padding:18px;line-height:1.7">No players yet.<br>Click + Add player above to get started.</div>'; return; }
-  el.innerHTML = PLAYERS.map(p => `
+  if (!fp.length) { el.innerHTML = '<div style="color:var(--t4);font-size:11px;text-align:center;padding:18px">No players match this filter.</div>'; return; }
+  el.innerHTML = fp.map(p => `
     <div class="pc-card" onclick="goToPlayer('${p.id}')">
       <div class="av ${p.av}">${p.ini}</div>
-      <div style="flex:1;min-width:0"><div class="pcn">${p.num ? '#' + p.num + ' ' : ''}${p.name}</div><div class="pcm">${p.pos}</div></div>
+      <div style="flex:1;min-width:0"><div class="pcn">${p.num ? '#' + p.num + ' ' : ''}${p.name}</div><div class="pcm">${p.pos}${p.team ? ' · ' + p.team : ''}</div></div>
       <button class="del-btn" onclick="delP(event,'${p.id}')" title="Remove player"><i class="ti ti-trash"></i></button>
     </div>`).join('');
 }
@@ -748,10 +820,12 @@ function goToPlayer(id) {
 
 function renderSquadTable() {
   const tb = document.getElementById('squad-tbody');
+  const fp = getFilteredPlayers();
   if (!PLAYERS.length) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--t4);padding:18px">No players yet.</td></tr>'; return; }
+  if (!fp.length) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--t4);padding:18px">No players match this filter.</td></tr>'; return; }
   const today = new Date(); today.setHours(0, 0, 0, 0);
   let flags = 0, risks = 0, totalSess = 0, acwrSum = 0, acwrCt = 0, tdSum = 0, tdCt = 0;
-  tb.innerHTML = PLAYERS.map(p => {
+  tb.innerHTML = fp.map(p => {
     const ss = SESS[p.id] || [];
     const tw = ss.filter(s => s.date && (today - new Date(s.date)) / 864e5 <= 7);
     totalSess += tw.length;
@@ -783,7 +857,7 @@ function renderSquadTable() {
   document.getElementById('ktd').textContent = tdCt ? Math.round(tdSum / tdCt).toLocaleString() : '—';
   const fl = document.getElementById('flags-list');
   const items = [];
-  PLAYERS.forEach(p => {
+  fp.forEach(p => {
     const a = calcACWR(p.id); if (!a || !a.ratio) return; const r = a.ratio;
     if (r > 1.5) items.push({ c: 'var(--rd)', t: `${p.name} — ACWR ${r.toFixed(2)}: injury risk zone. Immediate load reduction recommended.` });
     else if (r > 1.3) items.push({ c: 'var(--am)', t: `${p.name} — ACWR ${r.toFixed(2)}: caution zone. Avoid high-intensity sessions.` });
@@ -962,18 +1036,31 @@ function loadPlayerMetrics() {
   // ── Player header ──────────────────────────────────────────
   const lastSess = all[0];
   const daysSince = lastSess ? Math.round((today - new Date(lastSess.date))/864e5) : null;
+
+  // Days since 90% of max speed
+  const mssThreshold = p.mss ? p.mss * 0.9 : (aSp ? aSp * 0.9 : null);
+  const above90 = mssThreshold ? all.filter(s => s.spd && s.spd >= mssThreshold) : [];
+  const last90sess = above90[0]; // all is sorted newest first
+  const daysSince90 = last90sess ? Math.round((today - new Date(last90sess.date))/864e5) : null;
+  const speed90label = p.mss ? (p.mss * 0.9).toFixed(1) + ' km/h' : '90% max';
+  const days90color = daysSince90 === null ? 'var(--t4)' : daysSince90 <= 7 ? 'var(--gn)' : daysSince90 <= 14 ? 'var(--am)' : 'var(--rd)';
+
   document.getElementById('pm-player-header').innerHTML = `
     <div class="player-header-bar">
       <div class="ph-avatar ${p.av}">${p.ini}</div>
       <div>
         <div class="ph-name">${p.name}</div>
-        <div class="ph-pos">${p.pos}${p.num?' · #'+p.num:''}</div>
+        <div class="ph-pos">${p.pos}${p.num?' · #'+p.num:''}${p.club?' · '+p.club:''}</div>
       </div>
       <div class="ph-stats">
         <div class="ph-stat"><div class="ph-stat-v">${all.length}</div><div class="ph-stat-l">Total sessions</div></div>
         <div class="ph-stat"><div class="ph-stat-v">${n}</div><div class="ph-stat-l">This period</div></div>
         ${aSp?`<div class="ph-stat"><div class="ph-stat-v" style="color:var(--rd)">${aSp.toFixed(1)}</div><div class="ph-stat-l">Top speed km/h</div></div>`:''}
         ${daysSince!==null?`<div class="ph-stat"><div class="ph-stat-v" style="color:var(--am)">${daysSince}</div><div class="ph-stat-l">Days since last</div></div>`:''}
+        <div class="ph-stat" title="Last session where speed ≥ ${speed90label}">
+          <div class="ph-stat-v" style="color:${days90color}">${daysSince90!==null?daysSince90:'—'}</div>
+          <div class="ph-stat-l">Days since 90% speed</div>
+        </div>
       </div>
     </div>`;
 
