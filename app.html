@@ -593,19 +593,33 @@ function populatePlayerModalDataLists() {
   document.getElementById('team-list').innerHTML = teams.map(t => `<option value="${t}">`).join('');
 }
 
+// Ranges are calibrated to TRAINING sessions (MD-3/4 high load as the norm).
+// Matches are intentional outliers above the green zone — that is correct.
 const NORMS = {
-  td:{label:'Total distance',unit:'m',low:8500,ok:10000,high:12500,elite:13000,desc:'Match: 10–12km · Training MD3/4: 7–9km'},
-  hsr:{label:'HSR',unit:'m',low:600,ok:900,high:1400,elite:1800,desc:'Match: 1,000–1,400m · Training: 600–900m'},
-  spr:{label:'Sprint distance',unit:'m',low:200,ok:350,high:600,elite:800,desc:'Match: 300–600m · Training: 150–350m'},
-  hmld:{label:'HMLD',unit:'m',low:1200,ok:1800,high:2400,elite:2900,desc:'Match: 1,800–2,400m · Training: 1,200–1,800m'},
-  acc:{label:'Accelerations',unit:'#',low:25,ok:40,high:60,elite:75,desc:'Match: 40–70 · Training MD3/4: 25–50'},
-  dec:{label:'Decelerations',unit:'#',low:22,ok:36,high:56,elite:70,desc:'Match: 36–65 · Training MD3/4: 22–45'},
-  spd:{label:'Max speed',unit:'km/h',low:24,ok:28,high:33,elite:36,desc:'Elite: >30 km/h · High performance: >33 km/h'},
-  pl:{label:'Player load',unit:'AU',low:450,ok:650,high:950,elite:1100,desc:'Match: 700–1,000 · Training: 450–750'},
-  hsr_pct:{label:'HSR % of TD',unit:'%',low:8,ok:11,high:15,elite:18,desc:'Elite match: 10–13% of total distance as HSR'},
-  hmld_pct:{label:'HMLD % of TD',unit:'%',low:14,ok:18,high:24,elite:28,desc:'Elite match: 16–22% of total distance as HMLD'},
-  acc_dec:{label:'Acc:Dec ratio',unit:'',low:0.8,ok:1.0,high:1.3,elite:1.5,desc:'Balanced: ~1.0 · High ratio = acceleration dominant'},
-  acwr:{label:'ACWR',unit:'',low:0.8,ok:1.0,high:1.3,elite:1.5,desc:'Optimal: 0.8–1.3 · Risk zone: >1.5'}
+  td:{label:'Total distance',unit:'m',low:5500,ok:7000,high:9000,elite:10500,
+    desc:'Training target: 7–9km per session (MD-3/4) · Match average: 10–12.5km — matches should sit above the training range'},
+  hsr:{label:'HSR',unit:'m',low:400,ok:650,high:1050,elite:1300,
+    desc:'Training target: 650–1,050m (MD-3/4) · Match average: 1,100–1,500m — expect matches to exceed training norms'},
+  spr:{label:'Sprint distance',unit:'m',low:80,ok:180,high:380,elite:500,
+    desc:'Training target: 180–380m (MD-3/4) · Match average: 350–600m — sprinting naturally higher in games'},
+  hmld:{label:'HMLD',unit:'m',low:800,ok:1300,high:1900,elite:2400,
+    desc:'Training target: 1,300–1,900m (MD-3/4) · Match average: 2,000–2,600m — HMLD spikes in matches'},
+  acc:{label:'Accelerations',unit:'#',low:18,ok:28,high:52,elite:68,
+    desc:'Training target: 28–52 per session (MD-3/4) · Match average: 45–70 — matches demand more explosive actions'},
+  dec:{label:'Decelerations',unit:'#',low:16,ok:25,high:48,elite:62,
+    desc:'Training target: 25–48 per session (MD-3/4) · Match average: 40–65 — braking demand higher in matches'},
+  spd:{label:'Max speed',unit:'km/h',low:22,ok:27,high:31,elite:35,
+    desc:'Training target: ≥27 km/h in high load sessions · Match average: 30–34 km/h — max speed typically peaks in games'},
+  pl:{label:'Player load',unit:'AU',low:380,ok:560,high:800,elite:950,
+    desc:'Training target: 560–800 AU (MD-3/4) · Match average: 800–1,100 AU — overall physical stress highest in matches'},
+  hsr_pct:{label:'HSR % of TD',unit:'%',low:7,ok:9,high:13,elite:16,
+    desc:'Training target: 9–13% of distance at high speed · Match average: 10–14% — intensity % is similar across training and matches'},
+  hmld_pct:{label:'HMLD % of TD',unit:'%',low:13,ok:17,high:22,elite:27,
+    desc:'Training target: 17–22% of distance at high metabolic effort · Match average: 20–26%'},
+  acc_dec:{label:'Acc:Dec ratio',unit:'',low:0.8,ok:1.0,high:1.3,elite:1.5,
+    desc:'Balanced: ~1.0 in both training and matches · High ratio = acceleration dominant · Low = braking dominant'},
+  acwr:{label:'ACWR',unit:'',low:0.8,ok:1.0,high:1.3,elite:1.5,
+    desc:'Optimal: 0.8–1.3 · Caution: 1.3–1.5 · Risk zone: >1.5 — keep here to minimise soft tissue injury risk'}
 };
 
 // ============================================================
