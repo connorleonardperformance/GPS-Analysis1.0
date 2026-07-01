@@ -739,13 +739,11 @@ async function doSignOut() {
 // ============================================================
 async function loadData() {
   try {
-    const [{ data: players, error: pe }, { data: sessions, error: se }] = await Promise.all([
-      sb.from('players').select('*').eq('user_id', currentUser.id).order('created_at'),
-      sb.from('sessions').select('*').eq('user_id', currentUser.id).order('date', { ascending: false })
-    ]);
-    if (pe) { console.error('Players load error:', pe); document.title = 'ERR:'+pe.message; }
-    if (se) console.error('Sessions load error:', se);
-    console.log('Loaded players:', players?.length, 'user:', currentUser?.id);
+    const { data: players, error: pe } = await sb.from('players').select('*').eq('user_id', currentUser.id);
+    const { data: sessions, error: se } = await sb.from('sessions').select('*').eq('user_id', currentUser.id).order('date', { ascending: false });
+    if (pe) console.error('Players error:', pe.message);
+    if (se) console.error('Sessions error:', se.message);
+    console.log('Players returned:', players?.length, '| uid:', currentUser?.id);
 
     PLAYERS = (players || []).map((p, i) => ({
       ...p,
@@ -920,16 +918,19 @@ function renderAll() {
 }
 
 function populateSelects() {
+  const fp = getFilteredPlayers(); // respect Squad tab club/team filter
+  const opts = fp.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  const allOpts = PLAYERS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
   ['pm-sel', 'tr-sel', 'av-sel'].forEach(id => {
     const el = document.getElementById(id); if (!el) return;
     const v = el.value;
-    el.innerHTML = '<option value="">Select player...</option>' + PLAYERS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    el.innerHTML = '<option value="">Select player...</option>' + opts;
     el.value = v;
   });
-  const rp = document.getElementById('rp-sel'); if (rp) { const v = rp.value; rp.innerHTML = '<option value="">Full squad</option>' + PLAYERS.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); rp.value = v; }
-  const lt = document.getElementById('log-to'); if (lt) { const v = lt.value; lt.innerHTML = '<option value="">Select player...</option>' + PLAYERS.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); lt.value = v; }
-  const lsp = document.getElementById('ls-player'); if (lsp) { const v = lsp.value; lsp.innerHTML = '<option value="">Select player...</option>' + PLAYERS.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); lsp.value = v; }
-  const cpo = document.getElementById('csv-player-override'); if (cpo) { const v = cpo.value; cpo.innerHTML = '<option value="">Auto-match by name (recommended)</option>' + PLAYERS.map(p => `<option value="${p.id}">${p.name}</option>`).join(''); cpo.value = v; }
+  const rp = document.getElementById('rp-sel'); if (rp) { const v = rp.value; rp.innerHTML = '<option value="">Full squad</option>' + allOpts; rp.value = v; }
+  const lt = document.getElementById('log-to'); if (lt) { const v = lt.value; lt.innerHTML = '<option value="">Select player...</option>' + allOpts; lt.value = v; }
+  const lsp = document.getElementById('ls-player'); if (lsp) { const v = lsp.value; lsp.innerHTML = '<option value="">Select player...</option>' + allOpts; lsp.value = v; }
+  const cpo = document.getElementById('csv-player-override'); if (cpo) { const v = cpo.value; cpo.innerHTML = '<option value="">Auto-match by name (recommended)</option>' + allOpts; cpo.value = v; }
 }
 
 function renderSquadList() {
