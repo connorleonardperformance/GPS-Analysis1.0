@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GPS Analytics — Elite S&C Dashboard</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -136,6 +138,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 @media(max-width:700px){.dual{grid-template-columns:1fr}.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}.krow{grid-template-columns:repeat(2,1fr)}}
 .session-modal .g3{grid-template-columns:1fr 1fr 1fr}
 
+/* Flatpickr overrides */
+.flatpickr-calendar.dark{background:var(--bg3);border:1px solid var(--cy-bd);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.flatpickr-calendar.dark .flatpickr-months{border-radius:10px 10px 0 0}
+.flatpickr-calendar.dark .flatpickr-month,.flatpickr-calendar.dark .flatpickr-weekdays,.flatpickr-calendar.dark span.flatpickr-weekday{background:var(--bg4);color:var(--t2)}
+.flatpickr-calendar.dark .flatpickr-day{color:var(--t2);border-radius:6px}
+.flatpickr-calendar.dark .flatpickr-day:hover{background:var(--bg5);border-color:var(--bd2);color:#fff}
+.flatpickr-calendar.dark .flatpickr-day.selected,.flatpickr-calendar.dark .flatpickr-day.startRange,.flatpickr-calendar.dark .flatpickr-day.endRange{background:var(--cy);border-color:var(--cy);color:#080c10;font-weight:600}
+.flatpickr-calendar.dark .flatpickr-day.inRange{background:var(--cy-bg);border-color:transparent;color:var(--t);box-shadow:-5px 0 0 var(--cy-bg),5px 0 0 var(--cy-bg)}
+.flatpickr-calendar.dark .flatpickr-day.today{border-color:var(--cy)}
+.flatpickr-calendar.dark .flatpickr-day.flatpickr-disabled{color:var(--t4)}
+.flatpickr-calendar.dark .numInputWrapper:hover{background:var(--bg5)}
+.flatpickr-calendar.dark .flatpickr-current-month input.cur-year,.flatpickr-calendar.dark .flatpickr-current-month .flatpickr-monthDropdown-months{color:#fff;background:transparent}
+.flatpickr-calendar.dark .flatpickr-prev-month svg,.flatpickr-calendar.dark .flatpickr-next-month svg{fill:var(--t2)}
+.pm-picker-wrap{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--bd2);border-radius:7px;padding:5px 12px;cursor:pointer;transition:border-color .2s}
+.pm-picker-wrap:hover{border-color:var(--cy-bd)}
+.pm-picker-wrap input{background:transparent;border:none;color:var(--t2);font-size:11px;cursor:pointer;width:200px;outline:none;font-family:inherit;caret-color:transparent}
+
 /* Time range buttons */
 .time-btn{background:var(--bg4);border:1px solid var(--bd2);border-radius:6px;padding:5px 12px;font-size:11px;color:var(--t3);cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
 .time-btn.active{background:var(--cy-bg);color:var(--cy);border-color:var(--cy-bd)}
@@ -259,11 +278,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div id="page-player" class="page">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
     <select class="fsel" id="pm-sel" onchange="loadPlayerMetrics()" style="min-width:180px"><option value="">Select player...</option></select>
-    <div style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--bd2);border-radius:7px;padding:5px 10px;flex-wrap:wrap">
-      <i class="ti ti-calendar" style="color:var(--cy);font-size:14px"></i>
-      <input type="date" class="fi" id="pm-from" onchange="clearPMShortcut();loadPlayerMetrics()" style="width:138px;padding:4px 8px;background:transparent;border:none;border-radius:0">
-      <span style="color:var(--t3);font-size:11px">→</span>
-      <input type="date" class="fi" id="pm-to" onchange="clearPMShortcut();loadPlayerMetrics()" style="width:138px;padding:4px 8px;background:transparent;border:none;border-radius:0">
+    <div class="pm-picker-wrap" onclick="pmPicker && pmPicker.open()">
+      <i class="ti ti-calendar" style="color:var(--cy);font-size:14px;flex-shrink:0"></i>
+      <input type="text" id="pm-date-range" placeholder="Pick a date range…" readonly>
     </div>
     <div style="display:flex;gap:4px;flex-wrap:wrap">
       <button class="time-btn active" id="pm-btn-7" onclick="setPMRange(7,this)">7 days</button>
@@ -553,6 +570,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let PLAYERS = [], SESS = {};
+let pmPicker = null;
 let trendChart = null, sessChart = null, b64 = null, mime = null, exData = {};
 const AVC = ['avc','avg','ava','avr','avp','avb'];
 let avI = 0;
@@ -638,10 +656,17 @@ async function init() {
   const name = currentUser.user_metadata?.full_name || currentUser.email;
   document.getElementById('user-name-display').textContent = name;
   await loadData();
-  // Default date range: last 7 days
+  // Init Flatpickr range picker
   const _t = new Date(), _f = new Date(); _f.setDate(_f.getDate() - 6);
-  document.getElementById('pm-to').value = _t.toISOString().split('T')[0];
-  document.getElementById('pm-from').value = _f.toISOString().split('T')[0];
+  pmPicker = flatpickr('#pm-date-range', {
+    mode: 'range', dateFormat: 'D d M Y', theme: 'dark',
+    defaultDate: [_f, _t],
+    onChange(dates) {
+      clearPMShortcut();
+      if (dates.length === 2) loadPlayerMetrics();
+    }
+  });
+  document.getElementById('pm-btn-7').classList.add('active');
   document.getElementById('app-loading').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
 }
@@ -985,16 +1010,14 @@ async function delSession(id) {
 // PLAYER METRICS — redesigned
 // ============================================================
 function setPMRange(days, el) {
+  if (!pmPicker) return;
   const today = new Date();
-  const toEl = document.getElementById('pm-to');
-  const fromEl = document.getElementById('pm-from');
-  toEl.value = today.toISOString().split('T')[0];
   if (days === 0) {
-    fromEl.value = '';
+    pmPicker.clear();
   } else {
     const from = new Date(today);
     from.setDate(from.getDate() - (days - 1));
-    fromEl.value = from.toISOString().split('T')[0];
+    pmPicker.setDate([from, today], false);
   }
   document.querySelectorAll('#page-player .time-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
@@ -1057,10 +1080,9 @@ function loadPlayerMetrics() {
 
   const today = new Date(); today.setHours(0,0,0,0);
   const all = (SESS[id] || []).slice().sort((a,b) => new Date(b.date)-new Date(a.date));
-  const fromVal = document.getElementById('pm-from')?.value;
-  const toVal = document.getElementById('pm-to')?.value;
-  const fromDate = fromVal ? new Date(fromVal) : null;
-  const toDate = toVal ? new Date(toVal) : null;
+  const pickedDates = pmPicker ? pmPicker.selectedDates : [];
+  const fromDate = pickedDates[0] ? new Date(pickedDates[0]) : null;
+  const toDate = pickedDates[1] ? new Date(pickedDates[1]) : (pickedDates[0] ? new Date(pickedDates[0]) : null);
   if (toDate) toDate.setHours(23,59,59,999);
   const ss = (fromDate || toDate)
     ? all.filter(s => { if (!s.date) return true; const d = new Date(s.date); return (!fromDate || d >= fromDate) && (!toDate || d <= toDate); })
