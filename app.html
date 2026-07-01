@@ -573,8 +573,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </div><!-- /content -->
 
 <!-- ADD PLAYER MODAL -->
-<div class="modal-overlay" id="add-player-modal">
-  <div class="modal">
+<div class="modal-overlay" id="add-player-modal" onclick="if(event.target===this)closeM('add-player')">
+  <div class="modal" onclick="event.stopPropagation()">
     <div class="mhd"><span><i class="ti ti-user-plus" style="color:var(--cy);margin-right:6px"></i>Add player</span><button class="mc-x" onclick="closeM('add-player')">×</button></div>
     <div class="g2">
       <div class="fg"><div class="fl">Full name</div><input class="fi" id="np-name" placeholder="e.g. Ciarán Walsh"></div>
@@ -602,9 +602,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </div>
 
 <!-- LOG SESSION MODAL -->
-<div class="modal-overlay" id="log-session-modal">
-  <div class="modal session-modal" style="width:560px">
-    <div class="mhd"><span><i class="ti ti-run" style="color:var(--cy);margin-right:6px"></i>Log session</span><button class="mc-x" onclick="closeM('log-session-modal')">×</button></div>
+<div class="modal-overlay" id="log-session-modal" onclick="if(event.target===this)closeM('log-session')">
+  <div class="modal session-modal" style="width:560px" onclick="event.stopPropagation()">
+    <div class="mhd"><span><i class="ti ti-run" style="color:var(--cy);margin-right:6px"></i>Log session</span><button class="mc-x" onclick="closeM('log-session')">×</button></div>
     <div class="g2">
       <div class="fg"><div class="fl">Player</div><select class="fsel" id="ls-player" style="width:100%"><option value="">Select player...</option></select></div>
       <div class="fg"><div class="fl">Date</div><input class="fi" id="ls-date" type="date"></div>
