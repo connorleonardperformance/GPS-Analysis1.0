@@ -707,27 +707,26 @@ const NORMS = {
 // AUTH
 // ============================================================
 async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { window.location.href = '/'; return; }
-  currentUser = session.user;
-  const name = currentUser.user_metadata?.full_name || currentUser.email;
-  document.getElementById('user-name-display').textContent = name;
-  await loadData();
-  // Init Flatpickr range picker
-  const _t = new Date(), _f = new Date(); _f.setDate(_f.getDate() - 6);
-  pmPicker = flatpickr('#pm-date-range', {
-    mode: 'range', dateFormat: 'D d M Y',
-    defaultDate: [_f, _t],
-    onChange(dates) {
-      clearPMShortcut();
-      if (dates.length === 2) loadPlayerMetrics();
-    }
-  });
-  document.getElementById('pm-btn-7').classList.add('active');
-
-
-  document.getElementById('app-loading').style.display = 'none';
-  document.getElementById('app-content').style.display = 'block';
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = '/'; return; }
+    currentUser = session.user;
+    const name = currentUser.user_metadata?.full_name || currentUser.email;
+    document.getElementById('user-name-display').textContent = name;
+    await loadData();
+    const _t = new Date(), _f = new Date(); _f.setDate(_f.getDate() - 6);
+    pmPicker = flatpickr('#pm-date-range', {
+      mode: 'range', dateFormat: 'D d M Y',
+      defaultDate: [_f, _t],
+      onChange(dates) { clearPMShortcut(); if (dates.length === 2) loadPlayerMetrics(); }
+    });
+    document.getElementById('pm-btn-7').classList.add('active');
+  } catch(e) {
+    console.error('Init error:', e);
+  } finally {
+    document.getElementById('app-loading').style.display = 'none';
+    document.getElementById('app-content').style.display = 'block';
+  }
 }
 
 async function doSignOut() {
