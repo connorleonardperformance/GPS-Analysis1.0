@@ -1704,24 +1704,37 @@ async function logSquadBulk() {
   const btn = document.getElementById('bulk-log-btn');
   btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Importing…';
 
-  let created = 0, logged = 0;
-  for (const pl of bulkSquadData) {
-    // find or create player
-    let player = PLAYERS.find(p => p.name.toLowerCase() === pl.name.toLowerCase());
-    if (!player) {
-      const { data } = await sb.from('players').insert({ name: pl.name, club: club||null, team: team||null, user_id: (await sb.auth.getUser()).data.user.id }).select().single();
-      if (data) { player = data; created++; }
-    }
-    if (!player) continue;
-    await saveSessionToDb({ player_id: player.id, date, type,
-      td: pl.td||null, hsr: pl.hsr||null, spr: pl.spr||null, hmld: pl.hmld||null,
-      acc: pl.acc||null, dec: pl.dec||null, spd: pl.spd||null, pl: pl.pl||null,
-      dur: pl.dur||null, rpe: pl.rpe||null });
-    logged++;
+  // Split into new vs existing players
+  const newPlayers = bulkSquadData.filter(pl => !PLAYERS.find(p => p.name.toLowerCase() === pl.name.toLowerCase()));
+  const existingPlayers = bulkSquadData.filter(pl => PLAYERS.find(p => p.name.toLowerCase() === pl.name.toLowerCase()));
+
+  // Batch create all new players in one insert
+  let createdPlayers = [];
+  if (newPlayers.length) {
+    const { data } = await sb.from('players').insert(
+      newPlayers.map(pl => ({ name: pl.name, club: club||null, team: team||null, user_id: currentUser.id }))
+    ).select();
+    createdPlayers = data || [];
   }
 
+  // Build full player list (existing + newly created)
+  const allPlayers = [...PLAYERS, ...createdPlayers];
+
+  // Batch insert all sessions in one call
+  const sessions = bulkSquadData.map(pl => {
+    const player = allPlayers.find(p => p.name.toLowerCase() === pl.name.toLowerCase());
+    if (!player) return null;
+    return { player_id: player.id, date, type, user_id: currentUser.id,
+      td: pl.td||null, hsr: pl.hsr||null, spr: pl.spr||null, hmld: pl.hmld||null,
+      acc: pl.acc||null, dec: pl.dec||null, spd: pl.spd||null, pl: pl.pl||null,
+      dur: pl.dur||null, rpe: pl.rpe||null };
+  }).filter(Boolean);
+
+  const { error } = await sb.from('sessions').insert(sessions);
+  if (error) { toast('Error: ' + error.message, true); btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy"></i> Import all players & log sessions'; return; }
+
   await loadData();
-  toast(`Imported ${logged} sessions · ${created} new players created`);
+  toast(`${sessions.length} sessions logged · ${createdPlayers.length} new players created`);
   btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy"></i> Import all players & log sessions';
   document.getElementById('squad-import-panel').style.display = 'none';
   bulkSquadData = [];
