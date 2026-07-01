@@ -1160,7 +1160,7 @@ function loadPlayerMetrics() {
         <div class="ph-stat"><div class="ph-stat-v">${all.length}</div><div class="ph-stat-l">Total sessions</div></div>
         <div class="ph-stat"><div class="ph-stat-v">${n}</div><div class="ph-stat-l">This period</div></div>
         ${aSp?`<div class="ph-stat"><div class="ph-stat-v" style="color:var(--rd)">${aSp.toFixed(1)}</div><div class="ph-stat-l">Top speed km/h</div></div>`:''}
-        ${daysSince!==null?`<div class="ph-stat"><div class="ph-stat-v" style="color:var(--am)">${daysSince}</div><div class="ph-stat-l">Days since last</div></div>`:''}
+        ${daysSince!==null?`<div class="ph-stat" title="Days since last recorded GPS session"><div class="ph-stat-v" style="color:${daysSince<=3?'var(--gn)':daysSince<=7?'var(--am)':'var(--rd)'}">${daysSince}</div><div class="ph-stat-l">Days since last session</div></div>`:''}
         <div class="ph-stat" title="Last session where speed ≥ ${speed90label}">
           <div class="ph-stat-v" style="color:${days90color}">${daysSince90!==null?daysSince90:'—'}</div>
           <div class="ph-stat-l">Days since 90% speed</div>
