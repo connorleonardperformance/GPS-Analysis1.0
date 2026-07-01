@@ -1623,7 +1623,18 @@ async function doAnalyse() {
         ]
       }] })
     });
-    const d = await res.json();
+    const text = await res.text();
+    let d;
+    try { d = JSON.parse(text); } catch(e) {
+      document.getElementById('ai-out').textContent = 'API error: ' + text.slice(0, 200);
+      btn.disabled = false; btn.innerHTML = '<i class="ti ti-brain"></i> Extract from screenshot';
+      return;
+    }
+    if (!res.ok || d.error) {
+      document.getElementById('ai-out').textContent = 'API error: ' + (d.error?.message || d.error || text.slice(0,200));
+      btn.disabled = false; btn.innerHTML = '<i class="ti ti-brain"></i> Extract from screenshot';
+      return;
+    }
     const raw = d.content?.map(c => c.text || '').join('') || '';
 
     // Extract JSON from anywhere in the response
