@@ -259,11 +259,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div id="page-player" class="page">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
     <select class="fsel" id="pm-sel" onchange="loadPlayerMetrics()" style="min-width:180px"><option value="">Select player...</option></select>
+    <div style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--bd2);border-radius:7px;padding:5px 10px;flex-wrap:wrap">
+      <i class="ti ti-calendar" style="color:var(--cy);font-size:14px"></i>
+      <input type="date" class="fi" id="pm-from" onchange="clearPMShortcut();loadPlayerMetrics()" style="width:138px;padding:4px 8px;background:transparent;border:none;border-radius:0">
+      <span style="color:var(--t3);font-size:11px">→</span>
+      <input type="date" class="fi" id="pm-to" onchange="clearPMShortcut();loadPlayerMetrics()" style="width:138px;padding:4px 8px;background:transparent;border:none;border-radius:0">
+    </div>
     <div style="display:flex;gap:4px;flex-wrap:wrap">
-      <button class="time-btn active" onclick="setPMWindow(7,this)">This week</button>
-      <button class="time-btn" onclick="setPMWindow(14,this)">2 weeks</button>
-      <button class="time-btn" onclick="setPMWindow(28,this)">4 weeks</button>
-      <button class="time-btn" onclick="setPMWindow(0,this)">All time</button>
+      <button class="time-btn active" id="pm-btn-7" onclick="setPMRange(7,this)">7 days</button>
+      <button class="time-btn" id="pm-btn-14" onclick="setPMRange(14,this)">14 days</button>
+      <button class="time-btn" id="pm-btn-28" onclick="setPMRange(28,this)">28 days</button>
+      <button class="time-btn" id="pm-btn-0" onclick="setPMRange(0,this)">All time</button>
     </div>
     <button class="btn" onclick="openLogSession()" style="margin-left:auto"><i class="ti ti-plus"></i>Log session</button>
   </div>
@@ -632,6 +638,10 @@ async function init() {
   const name = currentUser.user_metadata?.full_name || currentUser.email;
   document.getElementById('user-name-display').textContent = name;
   await loadData();
+  // Default date range: last 7 days
+  const _t = new Date(), _f = new Date(); _f.setDate(_f.getDate() - 6);
+  document.getElementById('pm-to').value = _t.toISOString().split('T')[0];
+  document.getElementById('pm-from').value = _f.toISOString().split('T')[0];
   document.getElementById('app-loading').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
 }
@@ -974,12 +984,25 @@ async function delSession(id) {
 // ============================================================
 // PLAYER METRICS — redesigned
 // ============================================================
-let pmDays = 7;
-function setPMWindow(days, el) {
-  pmDays = days;
+function setPMRange(days, el) {
+  const today = new Date();
+  const toEl = document.getElementById('pm-to');
+  const fromEl = document.getElementById('pm-from');
+  toEl.value = today.toISOString().split('T')[0];
+  if (days === 0) {
+    fromEl.value = '';
+  } else {
+    const from = new Date(today);
+    from.setDate(from.getDate() - (days - 1));
+    fromEl.value = from.toISOString().split('T')[0];
+  }
   document.querySelectorAll('#page-player .time-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   loadPlayerMetrics();
+}
+
+function clearPMShortcut() {
+  document.querySelectorAll('#page-player .time-btn').forEach(b => b.classList.remove('active'));
 }
 
 const METRIC_INFO = {
@@ -1034,7 +1057,14 @@ function loadPlayerMetrics() {
 
   const today = new Date(); today.setHours(0,0,0,0);
   const all = (SESS[id] || []).slice().sort((a,b) => new Date(b.date)-new Date(a.date));
-  const ss = pmDays ? all.filter(s => !s.date || (today - new Date(s.date))/864e5 <= pmDays) : all;
+  const fromVal = document.getElementById('pm-from')?.value;
+  const toVal = document.getElementById('pm-to')?.value;
+  const fromDate = fromVal ? new Date(fromVal) : null;
+  const toDate = toVal ? new Date(toVal) : null;
+  if (toDate) toDate.setHours(23,59,59,999);
+  const ss = (fromDate || toDate)
+    ? all.filter(s => { if (!s.date) return true; const d = new Date(s.date); return (!fromDate || d >= fromDate) && (!toDate || d <= toDate); })
+    : all;
   const n = ss.length;
   const avg = k => n ? ss.reduce((a,s) => a+(s[k]||0), 0)/n : null;
 
