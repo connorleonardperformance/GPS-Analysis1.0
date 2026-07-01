@@ -1414,9 +1414,10 @@ function getMDLabel(dateStr, allSessions) {
   const plus  = prev ? Math.round((d - prev) / 864e5) : null;
   const minus = next ? Math.round((next - d) / 864e5) : null;
 
-  if (plus !== null && minus !== null) return `MD+${plus} / MD-${minus}`;
-  if (plus  !== null) return `MD+${plus}`;
+  // MD+1 and MD+2 = recovery days; MD+3+ = switch to counting down to next match
+  if (plus !== null && plus <= 2) return `MD+${plus}`;
   if (minus !== null) return `MD-${minus}`;
+  if (plus  !== null) return `MD+${plus}`;
   return null;
 }
 
