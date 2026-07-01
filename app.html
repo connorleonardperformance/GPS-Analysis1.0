@@ -410,14 +410,15 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 <!-- AI IMPORT -->
 <div id="page-ai" class="page">
   <div class="g2">
+    <!-- LEFT: upload + manual -->
     <div>
       <div class="panel" style="margin-bottom:11px">
         <div class="ph"><i class="ti ti-sparkles"></i>AI screenshot reader<div class="ph-r"><span class="pill pg"><i class="ti ti-circle-check" style="font-size:11px"></i>Claude-powered</span></div></div>
-        <div class="hint">Upload a screenshot from any GPS platform — STATSports, Catapult, Polar, Kitman Labs. Claude reads it, extracts every metric, benchmarks against elite norms, and gives a full sport science report.</div>
+        <div class="hint">Upload a squad GPS screenshot (any platform). Claude extracts every player and every metric automatically — single player or full squad.</div>
         <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-in').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
           <i class="ti ti-cloud-upload" style="font-size:32px;color:var(--cy);display:block;margin-bottom:8px"></i>
           <div style="font-size:13px;color:var(--t2);margin-bottom:4px">Drop GPS screenshot or click to upload</div>
-          <div style="font-size:10px;color:var(--t3)">PNG · JPG · WEBP · Any GPS platform</div>
+          <div style="font-size:10px;color:var(--t3)">PNG · JPG · WEBP · STATSports · Catapult · Any platform</div>
         </div>
         <input type="file" id="file-in" accept="image/*" style="display:none" onchange="handleFile(event)">
         <div id="prev-wrap" style="display:none;margin-bottom:12px">
@@ -427,75 +428,59 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
             <button class="btn-g" onclick="clearFile()" style="padding:4px 8px;font-size:10px">Clear</button>
           </div>
         </div>
-        <div class="fg"><div class="fl">Additional context (optional)</div><input class="fi" id="ai-ctx" placeholder="e.g. Match day data — centre midfielder"></div>
-        <button class="btn" style="width:100%;padding:10px;margin-bottom:8px" id="ai-btn" onclick="doAnalyse()" disabled><i class="ti ti-brain"></i>Analyse screenshot</button>
+        <div class="fg"><div class="fl">Additional context (optional)</div><input class="fi" id="ai-ctx" placeholder="e.g. Match day — Senior Men"></div>
+        <button class="btn" style="width:100%;padding:10px;margin-bottom:8px" id="ai-btn" onclick="doAnalyse()" disabled><i class="ti ti-brain"></i>Extract from screenshot</button>
       </div>
+
+      <!-- Manual single-player entry -->
       <div class="panel">
-        <div class="ph"><i class="ti ti-clipboard-text"></i>Or paste GPS data as text</div>
-        <textarea class="fi" id="paste-area" style="height:90px;resize:none" placeholder="Paste raw GPS data, CSV rows, or any copied table from your platform..."></textarea>
-        <button class="btn-g" style="width:100%;margin-top:8px;padding:9px" onclick="doAnalyseText()"><i class="ti ti-search"></i>Analyse pasted data</button>
-      </div>
-    </div>
-    <div>
-      <div class="panel" style="margin-bottom:11px">
-        <div class="ph"><i class="ti ti-report-analytics"></i>Claude's sport science report</div>
-        <div class="ai-box" id="ai-out">Upload a GPS screenshot or paste data above. Claude will extract all metrics, benchmark against professional norms, flag anomalies, and give 48–72 hour recommendations.</div>
-      </div>
-      <div class="panel">
-        <div class="ph"><i class="ti ti-table-import"></i>Session metrics — enter or edit manually</div>
+        <div class="ph"><i class="ti ti-pencil"></i>Manual entry — single player</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--cy);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Total Distance (m)</div>
-            <input class="fi" type="number" id="ex-td" placeholder="e.g. 8200" style="text-align:center;font-size:15px;font-weight:700;color:var(--cy)">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--gn);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">HSR (m)</div>
-            <input class="fi" type="number" id="ex-hsr" placeholder="e.g. 780" style="text-align:center;font-size:15px;font-weight:700;color:var(--gn)">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--am);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Sprint Dist (m)</div>
-            <input class="fi" type="number" id="ex-spr" placeholder="e.g. 220" style="text-align:center;font-size:15px;font-weight:700;color:var(--am)">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--pu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">HMLD (m)</div>
-            <input class="fi" type="number" id="ex-hmld" placeholder="e.g. 1400" style="text-align:center;font-size:15px;font-weight:700;color:var(--pu)">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Accelerations</div>
-            <input class="fi" type="number" id="ex-acc" placeholder="e.g. 38" style="text-align:center;font-size:15px;font-weight:700">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Decelerations</div>
-            <input class="fi" type="number" id="ex-dec" placeholder="e.g. 35" style="text-align:center;font-size:15px;font-weight:700">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--rd);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Max Speed (km/h)</div>
-            <input class="fi" type="number" id="ex-spd" placeholder="e.g. 31.2" step="0.1" style="text-align:center;font-size:15px;font-weight:700;color:var(--rd)">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Player Load</div>
-            <input class="fi" type="number" id="ex-pl" placeholder="e.g. 680" style="text-align:center;font-size:15px;font-weight:700">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Duration (min)</div>
-            <input class="fi" type="number" id="ex-dur" placeholder="e.g. 75" style="text-align:center;font-size:15px;font-weight:700">
-          </div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--cy);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Total Dist (m)</div><input class="fi" type="number" id="ex-td" placeholder="8200" style="text-align:center;font-size:14px;font-weight:700;color:var(--cy)"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--gn);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">HSR (m)</div><input class="fi" type="number" id="ex-hsr" placeholder="780" style="text-align:center;font-size:14px;font-weight:700;color:var(--gn)"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--am);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Sprint (m)</div><input class="fi" type="number" id="ex-spr" placeholder="220" style="text-align:center;font-size:14px;font-weight:700;color:var(--am)"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--pu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">HMLD (m)</div><input class="fi" type="number" id="ex-hmld" placeholder="1400" style="text-align:center;font-size:14px;font-weight:700;color:var(--pu)"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Acc</div><input class="fi" type="number" id="ex-acc" placeholder="38" style="text-align:center;font-size:14px;font-weight:700"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Dec</div><input class="fi" type="number" id="ex-dec" placeholder="35" style="text-align:center;font-size:14px;font-weight:700"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--rd);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Max Speed (km/h)</div><input class="fi" type="number" id="ex-spd" placeholder="31.2" step="0.1" style="text-align:center;font-size:14px;font-weight:700;color:var(--rd)"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Player Load</div><input class="fi" type="number" id="ex-pl" placeholder="680" style="text-align:center;font-size:14px;font-weight:700"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Duration (min)</div><input class="fi" type="number" id="ex-dur" placeholder="75" style="text-align:center;font-size:14px;font-weight:700"></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">RPE (1–10)</div>
-            <input class="fi" type="number" id="ex-rpe" placeholder="e.g. 7" min="1" max="10" style="text-align:center;font-size:15px;font-weight:700">
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Session date</div>
-            <input class="fi" type="date" id="ex-date" style="font-size:13px;font-weight:600">
-          </div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">RPE (1–10)</div><input class="fi" type="number" id="ex-rpe" placeholder="7" min="1" max="10" style="text-align:center;font-size:14px;font-weight:700"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Session date</div><input class="fi" type="date" id="ex-date" style="font-size:13px;font-weight:600"></div>
         </div>
-        <div class="fg"><div class="fl">Log to player</div><select class="fsel" id="log-to" style="width:100%"><option value="">Select player...</option></select></div>
+        <div class="fg"><div class="fl">Player</div><select class="fsel" id="log-to" style="width:100%"><option value="">Select player...</option></select></div>
         <div class="fg"><div class="fl">Session type</div><select class="fsel" id="log-type" style="width:100%">
           <option>Match</option><option>MD-1 activation</option><option>MD-2 technical</option><option>MD-3 high load</option><option>MD-4 high load</option><option>MD-5 recovery</option><option>Manual entry</option>
         </select></div>
         <button class="btn" style="width:100%;padding:10px" onclick="logExtracted()"><i class="ti ti-device-floppy"></i>Log session to player</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: squad bulk preview OR single report -->
+    <div>
+      <!-- Squad bulk import panel (shown after multi-player extraction) -->
+      <div class="panel" id="squad-import-panel" style="display:none;margin-bottom:11px">
+        <div class="ph"><i class="ti ti-users"></i>Squad detected — <span id="squad-count">0</span> players<div class="ph-r"><span class="pill pg">Ready to import</span></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div><div style="font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Club</div><input class="fi" id="bulk-club" placeholder="e.g. Aghabog"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Team</div><input class="fi" id="bulk-team" placeholder="e.g. Senior Men"></div>
+          <div><div style="font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Session date</div><input class="fi" type="date" id="bulk-date"></div>
+        </div>
+        <div class="fg" style="margin-bottom:10px"><div class="fl">Session type</div><select class="fsel" id="bulk-type" style="width:100%">
+          <option>Match</option><option>MD-1 activation</option><option>MD-2 technical</option><option>MD-3 high load</option><option>MD-4 high load</option><option>MD-5 recovery</option><option>Training</option>
+        </select></div>
+        <div id="squad-preview-table" style="overflow-x:auto;margin-bottom:12px;max-height:340px;overflow-y:auto"></div>
+        <button class="btn" style="width:100%;padding:11px" id="bulk-log-btn" onclick="logSquadBulk()">
+          <i class="ti ti-device-floppy"></i> Import all players &amp; log sessions
+        </button>
+      </div>
+
+      <!-- Single player report (shown for single-player screenshots) -->
+      <div class="panel" id="single-report-panel" style="margin-bottom:11px">
+        <div class="ph"><i class="ti ti-report-analytics"></i>Claude's sport science report</div>
+        <div class="ai-box" id="ai-out">Upload a GPS screenshot. Claude will extract all metrics, detect single or squad data, and prepare the import.</div>
       </div>
     </div>
   </div>
@@ -1582,44 +1567,150 @@ function processFile(f) {
 }
 function clearFile() { b64 = null; mime = null; document.getElementById('prev-wrap').style.display = 'none'; document.getElementById('file-in').value = ''; document.getElementById('ai-btn').disabled = true; }
 
-function buildPrompt(ctx) {
-  return `You are an elite sport scientist analysing GPS performance data from a professional S&C dashboard. Analyse all visible metrics and provide:
+let bulkSquadData = []; // holds extracted squad rows
 
-1. EXTRACTED METRICS — every GPS metric visible with value and unit (TD, HSR, SPR, HMLD, Acc, Dec, Max Speed, Player Load, Duration, RPE etc.)
+function buildSquadPrompt(ctx) {
+  return `You are analysing a GPS performance screenshot from a coaching platform (STATSports, Catapult, etc).
 
-2. LOAD ANALYSIS
-   • HSR as % of TD (elite match benchmark: 10–12%)
-   • HMLD as % of TD (benchmark: 18–22%)
-   • Sprint % of HSR
-   • Intensity index (HMLD/TD × 100)
-   • Acc:Dec ratio
+First determine: does this show ONE player or MULTIPLE players?
 
-3. ELITE BENCHMARKS COMPARISON — compare to professional norms:
-   Match: ~10–12km TD · ~1,200m HSR · ~400m SPR · ~2,000m HMLD · 40–60 Acc/Dec
-   Training: typically 65–75% of match values
+If MULTIPLE players, respond with ONLY valid JSON in this exact format (no markdown, no explanation):
+{
+  "type": "squad",
+  "session_date": "YYYY-MM-DD or null if not visible",
+  "club": "club/team name from the screenshot title if visible, else null",
+  "players": [
+    {
+      "name": "Player Name",
+      "td": 8200,
+      "hsr": 780,
+      "spr": 220,
+      "hmld": 1400,
+      "acc": 38,
+      "dec": 35,
+      "spd": 31.2,
+      "pl": null,
+      "dur": null,
+      "rpe": null
+    }
+  ]
+}
 
-4. SPORT SCIENCE COMMENTARY — 4–5 elite-level bullet points. Flag anything notable.
+If ONE player, respond with ONLY valid JSON:
+{
+  "type": "single",
+  "td": 8200, "hsr": 780, "spr": 220, "hmld": 1400,
+  "acc": 38, "dec": 35, "spd": 31.2, "pl": null, "dur": null, "rpe": null,
+  "report": "Your full sport science report here including load analysis, benchmarks, commentary and 48-72hr recommendations."
+}
 
-5. 48–72 HOUR RECOMMENDATIONS — 3 specific, actionable coaching decisions.
-
-${ctx ? 'Additional context: ' + ctx : ''}
-
-Be precise and clinically useful.`;
+Use null for any metric not visible. TD values in the screenshot may be in km — convert to metres (multiply by 1000).
+${ctx ? 'Additional context: ' + ctx : ''}`;
 }
 
 async function doAnalyse() {
   if (!b64) return;
   const btn = document.getElementById('ai-btn');
-  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Analysing…';
-  document.getElementById('ai-out').textContent = 'Analysing screenshot…';
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Reading screenshot…';
+  document.getElementById('ai-out').textContent = 'Reading screenshot…';
   try {
-    const res = await fetch('/api/analyse', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1200, messages: [{ role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: mime, data: b64 } }, { type: 'text', text: buildPrompt(document.getElementById('ai-ctx').value) }] }] }) });
+    const res = await fetch('/api/analyse', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4000, messages: [{
+        role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
+          { type: 'text', text: buildSquadPrompt(document.getElementById('ai-ctx').value) }
+        ]
+      }] })
+    });
     const d = await res.json();
-    const txt = d.content?.map(c => c.text || '').join('\n') || 'No response received.';
-    document.getElementById('ai-out').textContent = txt;
-    parseExtracted(txt);
+    const raw = d.content?.map(c => c.text || '').join('') || '';
+
+    // strip markdown code fences if present
+    const jsonStr = raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+    let parsed;
+    try { parsed = JSON.parse(jsonStr); } catch(e) {
+      document.getElementById('ai-out').textContent = 'Could not parse response. Raw output:\n\n' + raw;
+      btn.disabled = false; btn.innerHTML = '<i class="ti ti-brain"></i> Extract from screenshot';
+      return;
+    }
+
+    if (parsed.type === 'squad') {
+      renderSquadPreview(parsed);
+      document.getElementById('squad-import-panel').style.display = 'block';
+      document.getElementById('single-report-panel').style.display = 'none';
+    } else {
+      // Single player — populate manual fields and show report
+      document.getElementById('squad-import-panel').style.display = 'none';
+      document.getElementById('single-report-panel').style.display = 'block';
+      const fields = ['td','hsr','spr','hmld','acc','dec','spd','pl','dur','rpe'];
+      fields.forEach(k => { const el = document.getElementById('ex-'+k); if (el && parsed[k] != null) el.value = parsed[k]; });
+      document.getElementById('ai-out').textContent = parsed.report || 'No report generated.';
+    }
   } catch (e) { document.getElementById('ai-out').textContent = 'Error: ' + e.message; }
-  btn.disabled = false; btn.innerHTML = '<i class="ti ti-brain"></i> Analyse screenshot';
+  btn.disabled = false; btn.innerHTML = '<i class="ti ti-brain"></i> Extract from screenshot';
+}
+
+function renderSquadPreview(data) {
+  bulkSquadData = data.players || [];
+  document.getElementById('squad-count').textContent = bulkSquadData.length;
+
+  // Pre-fill club/date if detected
+  if (data.club) document.getElementById('bulk-club').value = data.club;
+  if (data.session_date) document.getElementById('bulk-date').value = data.session_date;
+  else document.getElementById('bulk-date').value = new Date().toISOString().split('T')[0];
+
+  const existingNames = PLAYERS.map(p => p.name.toLowerCase());
+  const metrics = ['td','hsr','spr','hmld','acc','dec','spd'];
+  const mLabels = ['TD (m)','HSR (m)','Sprint (m)','HMLD (m)','Acc','Dec','Max Spd'];
+
+  const rows = bulkSquadData.map((pl, i) => {
+    const isNew = !existingNames.includes(pl.name.toLowerCase());
+    return `<tr>
+      <td><span style="font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;background:${isNew?'var(--cy-bg)':'var(--gn-bg)'};color:${isNew?'var(--cy)':'var(--gn)'}">${isNew?'NEW':'EXISTS'}</span></td>
+      <td style="font-weight:600;white-space:nowrap">${pl.name}</td>
+      ${metrics.map(k => `<td style="color:${pl[k]!=null?'var(--t2)':'var(--t4)'}">${pl[k]??'—'}</td>`).join('')}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('squad-preview-table').innerHTML = `
+    <table class="tbl">
+      <thead><tr><th></th><th>Player</th>${mLabels.map(l=>`<th>${l}</th>`).join('')}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="font-size:10px;color:var(--t3);margin-top:6px">NEW = will be created · EXISTS = session will be added to existing player</div>`;
+}
+
+async function logSquadBulk() {
+  if (!bulkSquadData.length) return;
+  const club = document.getElementById('bulk-club').value.trim();
+  const team = document.getElementById('bulk-team').value.trim();
+  const date = document.getElementById('bulk-date').value || new Date().toISOString().split('T')[0];
+  const type = document.getElementById('bulk-type').value;
+  const btn = document.getElementById('bulk-log-btn');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader" style="animation:spin .7s linear infinite"></i> Importing…';
+
+  let created = 0, logged = 0;
+  for (const pl of bulkSquadData) {
+    // find or create player
+    let player = PLAYERS.find(p => p.name.toLowerCase() === pl.name.toLowerCase());
+    if (!player) {
+      const { data } = await sb.from('players').insert({ name: pl.name, club: club||null, team: team||null, user_id: (await sb.auth.getUser()).data.user.id }).select().single();
+      if (data) { player = data; created++; }
+    }
+    if (!player) continue;
+    await saveSessionToDb({ player_id: player.id, date, type,
+      td: pl.td||null, hsr: pl.hsr||null, spr: pl.spr||null, hmld: pl.hmld||null,
+      acc: pl.acc||null, dec: pl.dec||null, spd: pl.spd||null, pl: pl.pl||null,
+      dur: pl.dur||null, rpe: pl.rpe||null });
+    logged++;
+  }
+
+  await loadData();
+  toast(`Imported ${logged} sessions · ${created} new players created`);
+  btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy"></i> Import all players & log sessions';
+  document.getElementById('squad-import-panel').style.display = 'none';
+  bulkSquadData = [];
 }
 
 async function doAnalyseText() {
