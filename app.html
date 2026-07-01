@@ -399,7 +399,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <div id="av-empty" style="color:var(--t4);text-align:center;padding:40px;font-size:12px">Select a player to view session averages.</div>
   <div id="av-content" style="display:none">
     <div class="sep" id="av-day-heading">Day-by-day averages</div>
-    <div class="panel"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Sessions</th><th>Avg TD (m)</th><th>Avg HSR (m)</th><th>Avg HMLD (m)</th><th>Avg Acc</th><th>Avg Dec</th><th>Avg RPE</th><th>Total load</th></tr></thead><tbody id="day-tbody"></tbody></table></div></div>
+    <div class="panel"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Day</th><th>Session type</th><th>Sessions</th><th>Avg TD (m)</th><th>Avg HSR (m)</th><th>Avg HMLD (m)</th><th>Avg Acc</th><th>Avg Dec</th><th>Avg RPE</th><th>Total load</th></tr></thead><tbody id="day-tbody"></tbody></table></div></div>
     <div class="sep" id="av-week-heading">Week-by-week averages</div>
     <div class="panel"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Week</th><th>Sessions</th><th>Avg TD/sess</th><th>Total TD</th><th>Avg HSR/sess</th><th>Total HSR</th><th>Avg HMLD/sess</th><th>Total HMLD</th><th>Avg RPE</th><th>ACWR</th><th>T:M ratio</th></tr></thead><tbody id="week-tbody"></tbody></table></div></div>
     <div class="sep">Position comparison</div>
@@ -1412,11 +1412,18 @@ function loadAvgs() {
     const dt = new Date(avFrom); dt.setDate(dt.getDate() + d);
     const dStr = dt.toISOString().split('T')[0];
     const dSS = ss.filter(s => s.date === dStr); const nD = dSS.length;
+    if (!nD) continue;
+    const dayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
+    const sessionTypes = [...new Set(dSS.map(s => s.type).filter(Boolean))];
+    const typeColors = { 'Match':'var(--rd)', 'MD-1':'var(--am)', 'MD+1':'var(--am)', 'MD-2':'var(--cy)', 'MD+2':'var(--cy)', 'MD-3':'var(--gn)', 'MD-4':'var(--gn)', 'MD-5':'var(--t3)', 'MD-6':'var(--t3)' };
+    const typePills = sessionTypes.map(t => `<span style="font-size:10px;font-weight:600;color:${typeColors[t]||'var(--t2)'};background:${typeColors[t]||'var(--t2)'}18;border-radius:5px;padding:2px 7px">${t}</span>`).join(' ');
     const avgF = k => nD ? Math.round(dSS.reduce((a, s) => a + (s[k] || 0), 0) / nD) : null;
     const tdV = avgF('td'), hsrV = avgF('hsr'), hmldV = avgF('hmld'), accV = avgF('acc'), decV = avgF('dec'), rpeV = avgF('rpe');
     const tdLoad = nD ? dSS.reduce((a, s) => a + (s.td || 0), 0) : null;
     dayRows.push(`<tr>
       <td>${dStr}</td>
+      <td style="font-weight:600;color:var(--t2)">${dayName}</td>
+      <td>${typePills || '—'}</td>
       <td style="text-align:center;color:${nD ? 'var(--cy)' : 'var(--t4)'}">${nD}</td>
       <td style="color:${tdV ? valHex('td', tdV) : 'var(--t4)'}">${tdV ?? '—'}</td>
       <td style="color:${hsrV ? valHex('hsr', hsrV) : 'var(--t4)'}">${hsrV ?? '—'}</td>
