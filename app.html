@@ -391,13 +391,16 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 <div id="page-avgs" class="page">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
     <select class="fsel" id="av-sel" onchange="loadAvgs()" style="min-width:160px"><option value="">Select player...</option></select>
-    <span style="font-size:10px;color:var(--t3)">Day-by-day and week-by-week session averages</span>
+    <div class="pm-picker-wrap" id="av-picker-wrap" onclick="avPicker && avPicker.open()">
+      <i class="ti ti-calendar" style="color:var(--cy);font-size:14px;flex-shrink:0"></i>
+      <input type="text" id="av-date-range" placeholder="Pick a date range…" readonly>
+    </div>
   </div>
   <div id="av-empty" style="color:var(--t4);text-align:center;padding:40px;font-size:12px">Select a player to view session averages.</div>
   <div id="av-content" style="display:none">
-    <div class="sep">Day-by-day averages — last 7 days</div>
+    <div class="sep" id="av-day-heading">Day-by-day averages</div>
     <div class="panel"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Sessions</th><th>Avg TD (m)</th><th>Avg HSR (m)</th><th>Avg HMLD (m)</th><th>Avg Acc</th><th>Avg Dec</th><th>Avg RPE</th><th>Total load</th></tr></thead><tbody id="day-tbody"></tbody></table></div></div>
-    <div class="sep">Week-by-week averages — last 6 weeks</div>
+    <div class="sep" id="av-week-heading">Week-by-week averages</div>
     <div class="panel"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Week</th><th>Sessions</th><th>Avg TD/sess</th><th>Total TD</th><th>Avg HSR/sess</th><th>Total HSR</th><th>Avg HMLD/sess</th><th>Total HMLD</th><th>Avg RPE</th><th>ACWR</th><th>T:M ratio</th></tr></thead><tbody id="week-tbody"></tbody></table></div></div>
     <div class="sep">Position comparison</div>
     <div class="panel"><div id="pos-avg-content"></div></div>
@@ -774,6 +777,14 @@ function goP(id, el) {
   document.getElementById('page-' + id).classList.add('active');
   document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+  if (id === 'avgs' && !avPicker) {
+    const _t = new Date(), _f = new Date(_t); _f.setDate(_f.getDate() - 27);
+    avPicker = flatpickr('#av-date-range', {
+      mode: 'range', dateFormat: 'D d M Y',
+      defaultDate: [_f, _t],
+      onChange(dates) { if (dates.length === 2) loadAvgs(); }
+    });
+  }
   if (id === 'trends' && !trPicker) {
     const _t = new Date(), _tf = new Date(_t); _tf.setDate(_tf.getDate() - 27);
     trPicker = flatpickr('#tr-date-range', {
@@ -1242,7 +1253,7 @@ function loadPlayerMetrics() {
 // ============================================================
 // TRENDS — multi-metric, calendar-driven
 // ============================================================
-let trPicker = null;
+let trPicker = null, avPicker = null;
 const trCharts = {};
 
 const TR_LABELS = {
@@ -1389,9 +1400,16 @@ function loadAvgs() {
   if (!p) { document.getElementById('av-empty').style.display = ''; document.getElementById('av-content').style.display = 'none'; return; }
   document.getElementById('av-empty').style.display = 'none'; document.getElementById('av-content').style.display = 'block';
   const ss = SESS[id] || []; const today = new Date(); today.setHours(0, 0, 0, 0);
+  const avDates = avPicker ? avPicker.selectedDates : [];
+  const avFrom = avDates[0] ? new Date(avDates[0]) : new Date(today.getTime() - 6*864e5);
+  const avTo   = avDates[1] ? new Date(avDates[1]) : new Date(today);
+  avTo.setHours(23,59,59,999);
+  // build list of all dates in range
   const dayRows = [];
-  for (let d = 6; d >= 0; d--) {
-    const dt = new Date(today); dt.setDate(dt.getDate() - d);
+  const rangeMs = avTo - avFrom;
+  const rangeDays = Math.round(rangeMs / 864e5);
+  for (let d = 0; d <= rangeDays; d++) {
+    const dt = new Date(avFrom); dt.setDate(dt.getDate() + d);
     const dStr = dt.toISOString().split('T')[0];
     const dSS = ss.filter(s => s.date === dStr); const nD = dSS.length;
     const avgF = k => nD ? Math.round(dSS.reduce((a, s) => a + (s[k] || 0), 0) / nD) : null;
@@ -1409,11 +1427,16 @@ function loadAvgs() {
       <td style="color:var(--pu)">${tdLoad ? tdLoad.toLocaleString() : '—'}</td>
     </tr>`);
   }
+  const fmt = d => d.toISOString().slice(0,10).slice(5).replace('-','/');
+  document.getElementById('av-day-heading').textContent = `Day-by-day averages — ${fmt(avFrom)} to ${fmt(avTo)}`;
+  document.getElementById('av-week-heading').textContent = `Week-by-week averages — ${fmt(avFrom)} to ${fmt(avTo)}`;
   document.getElementById('day-tbody').innerHTML = dayRows.join('');
   const weekRows = [];
-  for (let w = 0; w < 6; w++) {
-    const wE = new Date(today); wE.setDate(wE.getDate() - w * 7);
-    const wS = new Date(wE); wS.setDate(wS.getDate() - 6);
+  // split range into 7-day buckets from avFrom
+  const totalWeeks = Math.ceil((rangeDays + 1) / 7);
+  for (let w = 0; w < totalWeeks; w++) {
+    const wS = new Date(avFrom); wS.setDate(wS.getDate() + w * 7);
+    const wE = new Date(wS); wE.setDate(wE.getDate() + 6); if (wE > avTo) wE.setTime(avTo.getTime());
     const wSS = ss.filter(s => { if (!s.date) return false; const d = new Date(s.date); return d >= wS && d <= wE; });
     const nW = wSS.length;
     const avgF = k => nW ? Math.round(wSS.reduce((a, s) => a + (s[k] || 0), 0) / nW) : null;
@@ -1423,7 +1446,7 @@ function loadAvgs() {
     const tm = mTD > 0 ? Math.round((tTD / mTD) * 10) / 10 : null;
     const acwrW = w === 0 ? calcACWR(id) : null; const rW = acwrW ? acwrW.ratio : null;
     weekRows.push(`<tr>
-      <td style="font-weight:500">${w === 0 ? 'This week' : w === 1 ? 'Last week' : 'W-' + (w + 1)}</td>
+      <td style="font-weight:500">${wS.toISOString().slice(5,10).replace('-','/')} – ${wE.toISOString().slice(5,10).replace('-','/')}</td>
       <td style="text-align:center;color:${nW ? 'var(--cy)' : 'var(--t4)'}">${nW}</td>
       <td style="color:${avgF('td') ? valHex('td', avgF('td')) : 'var(--t4)'}">${avgF('td') ?? '—'}</td>
       <td style="color:var(--pu)">${totF('td') ? totF('td').toLocaleString() : '—'}</td>
