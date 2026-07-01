@@ -739,22 +739,31 @@ async function doSignOut() {
 // DATA LAYER — Supabase
 // ============================================================
 async function loadData() {
-  const { data: players } = await sb.from('players').select('*').eq('user_id', currentUser.id).order('created_at');
-  const { data: sessions } = await sb.from('sessions').select('*').eq('user_id', currentUser.id).order('date', { ascending: false });
+  try {
+    const [{ data: players, error: pe }, { data: sessions, error: se }] = await Promise.all([
+      sb.from('players').select('*').eq('user_id', currentUser.id).order('created_at'),
+      sb.from('sessions').select('*').eq('user_id', currentUser.id).order('date', { ascending: false })
+    ]);
+    if (pe) console.error('Players load error:', pe);
+    if (se) console.error('Sessions load error:', se);
 
-  PLAYERS = (players || []).map((p, i) => ({
-    ...p,
-    ini: p.name.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2),
-    av: AVC[i % AVC.length]
-  }));
+    PLAYERS = (players || []).map((p, i) => ({
+      ...p,
+      ini: p.name.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2),
+      av: AVC[i % AVC.length]
+    }));
 
-  SESS = {};
-  PLAYERS.forEach(p => { SESS[p.id] = []; });
-  (sessions || []).forEach(s => {
-    if (SESS[s.player_id]) SESS[s.player_id].push(s);
-  });
+    SESS = {};
+    PLAYERS.forEach(p => { SESS[p.id] = []; });
+    (sessions || []).forEach(s => {
+      if (SESS[s.player_id]) SESS[s.player_id].push(s);
+    });
 
-  renderAll();
+    renderAll();
+  } catch(e) {
+    console.error('loadData failed:', e);
+    renderAll();
+  }
 }
 
 async function savePlayerToDb(playerData) {
