@@ -1392,7 +1392,7 @@ function loadTrends() {
     const n = NORMS[metric];
     const label = TR_LABELS[metric] || metric;
     const color = TR_COLORS[metric] || '#2563EB';
-    const vals = filtered.map(s => s[metric] ?? null);
+    const vals = filtered.map(s => { const v = s[metric] ?? null; return (metric === 'spd' && v !== null) ? toKmh(v) : v; });
     const unit = n ? n.unit : '';
 
     // Stats
