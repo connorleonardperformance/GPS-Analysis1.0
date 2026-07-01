@@ -1637,14 +1637,13 @@ async function doAnalyse() {
     }
     const raw = d.content?.map(c => c.text || '').join('') || '';
 
-    // Try to find JSON — look for array of players first, then object
+    // Strip markdown fences and parse JSON
     let parsed = null;
-    // Try all JSON-like substrings from longest to shortest
-    const jsonCandidates = [...raw.matchAll(/(\{[\s\S]*?\}|\[[\s\S]*?\])/g)].map(m => m[0]);
-    // Try the full raw first (stripped of markdown), then candidates
-    const attempts = [raw.replace(/```json|```/gi,'').trim(), ...jsonCandidates];
-    for (const attempt of attempts) {
-      try { parsed = JSON.parse(attempt); break; } catch(e) {}
+    const stripped = raw.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+    try { parsed = JSON.parse(stripped); } catch(e) {
+      // Truncated JSON — try to recover players array up to last complete object
+      const fixAttempt = stripped.replace(/,?\s*\{[^}]*$/, '').replace(/,?\s*\[$/, '') + ']}';
+      try { parsed = JSON.parse(fixAttempt); } catch(e2) {}
     }
 
     // Show raw output always so coach can see what Claude said
