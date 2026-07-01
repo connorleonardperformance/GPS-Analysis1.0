@@ -442,27 +442,60 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         <div class="ai-box" id="ai-out">Upload a GPS screenshot or paste data above. Claude will extract all metrics, benchmark against professional norms, flag anomalies, and give 48–72 hour recommendations.</div>
       </div>
       <div class="panel">
-        <div class="ph"><i class="ti ti-table-import"></i>Extracted metrics — ready to log</div>
-        <div class="g3" style="margin-bottom:10px">
-          <div class="kpi" style="padding:10px"><div class="kl">Total distance</div><div class="kv" id="ex-td" style="font-size:17px;color:var(--cy)">—</div><div class="ks">m</div></div>
-          <div class="kpi" style="padding:10px"><div class="kl">HSR</div><div class="kv" id="ex-hsr" style="font-size:17px;color:var(--gn)">—</div><div class="ks">m</div></div>
-          <div class="kpi" style="padding:10px"><div class="kl">Sprint</div><div class="kv" id="ex-spr" style="font-size:17px;color:var(--am)">—</div><div class="ks">m</div></div>
+        <div class="ph"><i class="ti ti-table-import"></i>Session metrics — enter or edit manually</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--cy);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Total Distance (m)</div>
+            <input class="fi" type="number" id="ex-td" placeholder="e.g. 8200" style="text-align:center;font-size:15px;font-weight:700;color:var(--cy)">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--gn);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">HSR (m)</div>
+            <input class="fi" type="number" id="ex-hsr" placeholder="e.g. 780" style="text-align:center;font-size:15px;font-weight:700;color:var(--gn)">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--am);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Sprint Dist (m)</div>
+            <input class="fi" type="number" id="ex-spr" placeholder="e.g. 220" style="text-align:center;font-size:15px;font-weight:700;color:var(--am)">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--pu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">HMLD (m)</div>
+            <input class="fi" type="number" id="ex-hmld" placeholder="e.g. 1400" style="text-align:center;font-size:15px;font-weight:700;color:var(--pu)">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Accelerations</div>
+            <input class="fi" type="number" id="ex-acc" placeholder="e.g. 38" style="text-align:center;font-size:15px;font-weight:700">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Decelerations</div>
+            <input class="fi" type="number" id="ex-dec" placeholder="e.g. 35" style="text-align:center;font-size:15px;font-weight:700">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--rd);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Max Speed (km/h)</div>
+            <input class="fi" type="number" id="ex-spd" placeholder="e.g. 31.2" step="0.1" style="text-align:center;font-size:15px;font-weight:700;color:var(--rd)">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Player Load</div>
+            <input class="fi" type="number" id="ex-pl" placeholder="e.g. 680" style="text-align:center;font-size:15px;font-weight:700">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Duration (min)</div>
+            <input class="fi" type="number" id="ex-dur" placeholder="e.g. 75" style="text-align:center;font-size:15px;font-weight:700">
+          </div>
         </div>
-        <div class="g3" style="margin-bottom:10px">
-          <div class="kpi" style="padding:10px"><div class="kl">HMLD</div><div class="kv" id="ex-hmld" style="font-size:17px;color:var(--pu)">—</div><div class="ks">m</div></div>
-          <div class="kpi" style="padding:10px"><div class="kl">Accel</div><div class="kv" id="ex-acc" style="font-size:17px">—</div></div>
-          <div class="kpi" style="padding:10px"><div class="kl">Decel</div><div class="kv" id="ex-dec" style="font-size:17px">—</div></div>
-        </div>
-        <div class="g3" style="margin-bottom:12px">
-          <div class="kpi" style="padding:10px"><div class="kl">Max speed</div><div class="kv" id="ex-spd" style="font-size:17px;color:var(--rd)">—</div><div class="ks">km/h</div></div>
-          <div class="kpi" style="padding:10px"><div class="kl">Player load</div><div class="kv" id="ex-pl" style="font-size:17px">—</div></div>
-          <div class="kpi" style="padding:10px"><div class="kl">Duration</div><div class="kv" id="ex-dur" style="font-size:17px">—</div><div class="ks">min</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">RPE (1–10)</div>
+            <input class="fi" type="number" id="ex-rpe" placeholder="e.g. 7" min="1" max="10" style="text-align:center;font-size:15px;font-weight:700">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Session date</div>
+            <input class="fi" type="date" id="ex-date" style="font-size:13px;font-weight:600">
+          </div>
         </div>
         <div class="fg"><div class="fl">Log to player</div><select class="fsel" id="log-to" style="width:100%"><option value="">Select player...</option></select></div>
         <div class="fg"><div class="fl">Session type</div><select class="fsel" id="log-type" style="width:100%">
-          <option>Match</option><option>MD-1 activation</option><option>MD-2 technical</option><option>MD-3 high load</option><option>MD-4 high load</option><option>MD-5 recovery</option><option>AI import</option>
+          <option>Match</option><option>MD-1 activation</option><option>MD-2 technical</option><option>MD-3 high load</option><option>MD-4 high load</option><option>MD-5 recovery</option><option>Manual entry</option>
         </select></div>
-        <button class="btn" style="width:100%;padding:10px" onclick="logExtracted()"><i class="ti ti-device-floppy"></i>Log extracted data to player</button>
+        <button class="btn" style="width:100%;padding:10px" onclick="logExtracted()"><i class="ti ti-device-floppy"></i>Log session to player</button>
       </div>
     </div>
   </div>
@@ -1614,26 +1647,29 @@ function parseExtracted(text) {
     { k: 'dur', id: 'ex-dur', rx: /(?:duration|time)[\s:\-]+([0-9]+)\s*min/i }
   ];
   exData = {};
-  patterns.forEach(({ k, id, rx }) => { const m = text.match(rx); if (m) { const v = m[1].replace(/,/g, ''); exData[k] = v; const el = document.getElementById(id); if (el) el.textContent = k === 'td' ? parseInt(v).toLocaleString() : parseFloat(v); } });
+  patterns.forEach(({ k, id, rx }) => { const m = text.match(rx); if (m) { const v = m[1].replace(/,/g, ''); exData[k] = v; const el = document.getElementById(id); if (el) el.value = parseFloat(v); } });
 }
 
 async function logExtracted() {
   const pid = document.getElementById('log-to').value;
   const p = PLAYERS.find(x => x.id == pid);
   if (!p) { alert('Select a player to log to.'); return; }
-  if (!exData.td) { alert('No metrics extracted yet.'); return; }
+  const g = id => { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; };
+  const td = g('ex-td');
+  if (!td) { alert('At least Total Distance is required.'); return; }
+  const dateVal = document.getElementById('ex-date').value || new Date().toISOString().split('T')[0];
   await saveSessionToDb({
     player_id: pid,
-    date: new Date().toISOString().split('T')[0],
+    date: dateVal,
     type: document.getElementById('log-type').value,
-    td: parseFloat(exData.td) || null, hsr: parseFloat(exData.hsr) || null,
-    spr: parseFloat(exData.spr) || null, hmld: parseFloat(exData.hmld) || null,
-    acc: parseFloat(exData.acc) || null, dec: parseFloat(exData.dec) || null,
-    spd: parseFloat(exData.spd) || null, pl: parseFloat(exData.pl) || null,
-    dur: parseFloat(exData.dur) || null
+    td, hsr: g('ex-hsr'), spr: g('ex-spr'), hmld: g('ex-hmld'),
+    acc: g('ex-acc'), dec: g('ex-dec'), spd: g('ex-spd'),
+    pl: g('ex-pl'), dur: g('ex-dur'), rpe: g('ex-rpe')
   });
   await loadData();
   toast('Session logged to ' + p.name);
+  // clear fields
+  ['ex-td','ex-hsr','ex-spr','ex-hmld','ex-acc','ex-dec','ex-spd','ex-pl','ex-dur','ex-rpe','ex-date'].forEach(id => document.getElementById(id).value = '');
 }
 
 // ============================================================
