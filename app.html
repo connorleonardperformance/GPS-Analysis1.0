@@ -235,6 +235,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .pm-picker-wrap{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--bd);border-radius:8px;padding:6px 13px;cursor:pointer;transition:all .15s;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 .pm-picker-wrap:hover{border-color:var(--cy-bd);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
 .pm-picker-wrap input{background:transparent;border:none;color:var(--t2);font-size:12px;font-weight:500;cursor:pointer;width:210px;outline:none;font-family:'Inter',sans-serif;caret-color:transparent}
+.tr-check{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--t2);background:var(--bg4);border:1px solid var(--bd);border-radius:7px;padding:5px 10px;cursor:pointer;transition:all .15s;user-select:none}
+.tr-check:hover{border-color:var(--cy-bd);background:var(--cy-bg)}
+.tr-check input[type=checkbox]{accent-color:var(--cy);width:13px;height:13px;cursor:pointer}
+.tr-check:has(input:checked){border-color:var(--cy);background:var(--cy-bg);color:var(--cy)}
 </style>
 </head>
 <body>
@@ -342,51 +346,45 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 
 <!-- TRENDS -->
 <div id="page-trends" class="page">
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-    <select class="fsel" id="tr-sel" onchange="loadTrends()" style="min-width:180px"><option value="">Select player...</option></select>
-    <select class="fsel" id="tr-metric" onchange="loadTrends()">
-      <option value="td">Total Distance — how far they ran</option>
-      <option value="hsr">High Speed Running — fast running</option>
-      <option value="spr">Sprint Distance — full speed efforts</option>
-      <option value="hmld">High Intensity Work (HMLD)</option>
-      <option value="acc">Explosive Actions — accelerations</option>
-      <option value="dec">Braking Actions — decelerations</option>
-      <option value="spd">Top Speed — fastest recorded</option>
-      <option value="pl">Body Stress Score — player load</option>
-      <option value="rpe">Effort Rating — RPE (1–10)</option>
-    </select>
-    <div style="display:flex;gap:4px;flex-wrap:wrap">
-      <button class="time-btn active" onclick="setTRWindow(14,this)">2 weeks</button>
-      <button class="time-btn" onclick="setTRWindow(28,this)">4 weeks</button>
-      <button class="time-btn" onclick="setTRWindow(56,this)">8 weeks</button>
-      <button class="time-btn" onclick="setTRWindow(90,this)">3 months</button>
-      <button class="time-btn" onclick="setTRWindow(180,this)">6 months</button>
-      <button class="time-btn" onclick="setTRWindow(0,this)">All time</button>
+  <!-- Controls bar -->
+  <div class="panel" style="margin-bottom:14px;padding:14px 16px">
+    <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <!-- Player select -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <span style="font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px">Player</span>
+        <select class="fsel" id="tr-sel" onchange="loadTrends()" style="min-width:180px"><option value="">Select player...</option></select>
+      </div>
+      <!-- Date range -->
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <span style="font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px">Date range</span>
+        <div class="pm-picker-wrap" id="tr-picker-wrap" onclick="trPicker && trPicker.open()">
+          <i class="ti ti-calendar" style="color:var(--cy);font-size:14px;flex-shrink:0"></i>
+          <input type="text" id="tr-date-range" placeholder="Pick a date range…" readonly>
+        </div>
+      </div>
+      <!-- Metrics checkboxes -->
+      <div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:260px">
+        <span style="font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px">Metrics — select any</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="tr-metric-checks">
+          <label class="tr-check"><input type="checkbox" value="td" onchange="loadTrends()"> Total Distance</label>
+          <label class="tr-check"><input type="checkbox" value="hsr" onchange="loadTrends()"> High Speed Run</label>
+          <label class="tr-check"><input type="checkbox" value="spr" onchange="loadTrends()"> Sprint Distance</label>
+          <label class="tr-check"><input type="checkbox" value="hmld" onchange="loadTrends()"> HMLD</label>
+          <label class="tr-check"><input type="checkbox" value="acc" onchange="loadTrends()"> Accelerations</label>
+          <label class="tr-check"><input type="checkbox" value="dec" onchange="loadTrends()"> Decelerations</label>
+          <label class="tr-check"><input type="checkbox" value="spd" onchange="loadTrends()"> Top Speed</label>
+          <label class="tr-check"><input type="checkbox" value="pl" onchange="loadTrends()"> Player Load</label>
+          <label class="tr-check"><input type="checkbox" value="rpe" onchange="loadTrends()"> RPE</label>
+        </div>
+      </div>
     </div>
   </div>
+
   <div id="tr-empty" style="color:var(--t4);text-align:center;padding:60px;font-size:13px">
     <i class="ti ti-chart-line" style="font-size:48px;display:block;margin-bottom:14px;opacity:.3"></i>
-    Select a player and metric to view their trend
+    Select a player and at least one metric to view trends
   </div>
-  <div id="tr-content" style="display:none">
-    <div class="panel" style="margin-bottom:12px">
-      <div class="ph">
-        <i class="ti ti-chart-line"></i><span id="tr-title">Trend</span>
-        <div class="ph-r"><span id="tr-badge" class="pill pgr"></span><span id="tr-change" style="font-size:10px;color:var(--t3)"></span></div>
-      </div>
-      <div class="chart-wrap" style="height:280px"><canvas id="trend-chart"></canvas></div>
-    </div>
-    <div class="g2">
-      <div class="panel">
-        <div class="ph"><i class="ti ti-chart-dots"></i>Session by session</div>
-        <div class="chart-wrap" style="height:200px"><canvas id="session-chart"></canvas></div>
-      </div>
-      <div class="panel">
-        <div class="ph"><i class="ti ti-math"></i>Summary</div>
-        <div id="trend-stats"></div>
-      </div>
-    </div>
-  </div>
+  <div id="tr-charts" style="display:none;display:flex;flex-direction:column;gap:14px"></div>
 </div>
 
 <!-- SESSION AVERAGES -->
@@ -609,7 +607,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let PLAYERS = [], SESS = {};
 let pmPicker = null;
-let trendChart = null, sessChart = null, b64 = null, mime = null, exData = {};
+let b64 = null, mime = null, exData = {};
 const AVC = ['avc','avg','ava','avr','avp','avb'];
 let avI = 0;
 let filterClub = '', filterTeam = '';
@@ -705,6 +703,8 @@ async function init() {
     }
   });
   document.getElementById('pm-btn-7').classList.add('active');
+
+
   document.getElementById('app-loading').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
 }
@@ -774,6 +774,14 @@ function goP(id, el) {
   document.getElementById('page-' + id).classList.add('active');
   document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+  if (id === 'trends' && !trPicker) {
+    const _t = new Date(), _tf = new Date(_t); _tf.setDate(_tf.getDate() - 27);
+    trPicker = flatpickr('#tr-date-range', {
+      mode: 'range', dateFormat: 'D d M Y',
+      defaultDate: [_tf, _t],
+      onChange(dates) { if (dates.length === 2) loadTrends(); }
+    });
+  }
 }
 
 function openM(id) {
@@ -1232,151 +1240,144 @@ function loadPlayerMetrics() {
 }
 
 // ============================================================
-// TRENDS — redesigned
+// TRENDS — multi-metric, calendar-driven
 // ============================================================
-let trDays = 14;
-function setTRWindow(days, el) {
-  trDays = days;
-  document.querySelectorAll('#page-trends .time-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  loadTrends();
-}
+let trPicker = null;
+const trCharts = {};
 
 const TR_LABELS = {
   td:'Total Distance', hsr:'High Speed Running', spr:'Sprint Distance',
-  hmld:'High Intensity Work', acc:'Explosive Actions', dec:'Braking Actions',
-  spd:'Top Speed', pl:'Body Stress Score', rpe:'Effort Rating (RPE)'
+  hmld:'High Intensity Work (HMLD)', acc:'Accelerations', dec:'Decelerations',
+  spd:'Top Speed', pl:'Player Load', rpe:'RPE'
+};
+const TR_COLORS = {
+  td:'#2563EB', hsr:'#16A34A', spr:'#DC2626', hmld:'#7C3AED',
+  acc:'#D97706', dec:'#0EA5E9', spd:'#DB2777', pl:'#059669', rpe:'#9333EA'
 };
 
 function loadTrends() {
   const id = document.getElementById('tr-sel').value;
-  const metric = document.getElementById('tr-metric').value;
   const p = PLAYERS.find(x => x.id == id);
-  if (!p || !metric) { document.getElementById('tr-empty').style.display=''; document.getElementById('tr-content').style.display='none'; return; }
-  document.getElementById('tr-empty').style.display='none'; document.getElementById('tr-content').style.display='block';
+  const metrics = [...document.querySelectorAll('#tr-metric-checks input:checked')].map(c => c.value);
 
-  const today = new Date(); today.setHours(0,0,0,0);
-  const allSess = (SESS[id]||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const filtered = trDays ? allSess.filter(s=>s.date&&(today-new Date(s.date))/864e5<=trDays) : allSess;
-  const n = NORMS[metric];
-  const label = TR_LABELS[metric] || metric;
+  const empty = document.getElementById('tr-empty');
+  const container = document.getElementById('tr-charts');
 
-  document.getElementById('tr-title').textContent = p.name + ' — ' + label;
-
-  // Session-by-session line chart (main chart)
-  const sessVals = filtered.map(s => s[metric]||null);
-  const sessLabels = filtered.map(s => s.date ? s.date.slice(5).replace('-','/') : '?');
-
-  // Add norm reference lines if available
-  const datasets = [{
-    label,
-    data: sessVals,
-    borderColor: '#2563EB',
-    backgroundColor: 'rgba(37,99,235,0.06)',
-    borderWidth: 2.5,
-    pointBackgroundColor: sessVals.map(v => v!==null ? valHex(metric,v) : '#94A3B8'),
-    pointRadius: sessVals.length > 30 ? 3 : 5,
-    pointBorderColor: '#fff',
-    pointBorderWidth: 2,
-    tension: 0.35,
-    fill: true,
-    spanGaps: true
-  }];
-
-  if (n) {
-    datasets.push({ label:'Target min (' + n.ok.toLocaleString() + ' ' + n.unit + ')', data: filtered.map(()=>n.ok), borderColor:'#00e676', borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false });
-    datasets.push({ label:'Target max (' + n.high.toLocaleString() + ' ' + n.unit + ')', data: filtered.map(()=>n.high), borderColor:'#ffab00', borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false });
+  if (!p || !metrics.length) {
+    empty.style.display = '';
+    container.style.display = 'none';
+    return;
   }
 
-  const chartOpts = {
-    responsive: true, maintainAspectRatio: false,
-    plugins: {
-      legend: { display: n?true:false, labels:{ color:'#475569', font:{size:11,weight:'600'}, boxWidth:20, padding:16, filter: i=>i.datasetIndex===0||i.text!==label } },
-      tooltip: {
-        backgroundColor:'#0F172A', borderColor:'#1E293B', borderWidth:1,
-        titleColor:'#F8FAFC', bodyColor:'#94A3B8', padding:11, cornerRadius:8,
-        callbacks: { label: c => c.datasetIndex===0 ? `  ${label}: ${c.parsed.y!==null?c.parsed.y.toLocaleString()+' '+(n?n.unit:''):'-'}` : `  ${c.dataset.label}` }
-      }
-    },
-    scales: {
-      x: { ticks:{ color:'#64748B', font:{size:10,weight:'500'}, maxRotation:45, maxTicksLimit:12 }, grid:{color:'#F1F5F9'}, border:{color:'#E2E8F0'} },
-      y: { ticks:{ color:'#64748B', font:{size:11,weight:'600'}, callback: v=>v.toLocaleString() }, grid:{color:'#F1F5F9'}, border:{color:'#E2E8F0'} }
-    }
-  };
+  empty.style.display = 'none';
+  container.style.display = 'flex';
 
-  if (trendChart) trendChart.destroy();
-  trendChart = new Chart(document.getElementById('trend-chart').getContext('2d'), { type:'line', data:{ labels:sessLabels, datasets }, options:chartOpts });
+  const allSess = (SESS[id]||[]).slice().sort((a,b) => new Date(a.date)-new Date(b.date));
+  const trDates = trPicker ? trPicker.selectedDates : [];
+  const trFrom = trDates[0] ? new Date(trDates[0]) : null;
+  const trTo   = trDates[1] ? new Date(trDates[1]) : (trDates[0] ? new Date(trDates[0]) : null);
+  if (trTo) trTo.setHours(23,59,59,999);
+  const filtered = (trFrom||trTo)
+    ? allSess.filter(s => { const d = new Date(s.date); return (!trFrom||d>=trFrom)&&(!trTo||d<=trTo); })
+    : allSess;
 
-  // Badge — latest value
-  const latest = sessVals.filter(v=>v!==null).slice(-1)[0];
-  if (latest!=null) { const b=document.getElementById('tr-badge'); b.className='pill '+valPill(metric,latest); b.textContent=latest.toLocaleString()+' '+(n?n.unit:''); }
+  const labels = filtered.map(s => s.date ? s.date.slice(5).replace('-','/') : '?');
 
-  // Week-on-week change
-  const prev = sessVals.filter(v=>v!==null).slice(-4,-1);
-  const prevAvg = prev.length ? prev.reduce((a,v)=>a+v,0)/prev.length : null;
-  const chEl = document.getElementById('tr-change');
-  if (latest!=null && prevAvg!=null) {
-    const pct = Math.round(((latest-prevAvg)/prevAvg)*100);
-    chEl.textContent = (pct>0?'↑ +':'↓ ')+pct+'% vs prior avg';
-    chEl.style.color = pct>15?'var(--rd)':pct>0?'var(--gn)':'var(--am)';
-  } else { chEl.textContent=''; }
-
-  // Session-by-session mini chart (bottom left) — last 15 sessions
-  const recent15 = allSess.slice(-15);
-  if (sessChart) sessChart.destroy();
-  sessChart = new Chart(document.getElementById('session-chart').getContext('2d'), {
-    type: 'line',
-    data: {
-      labels: recent15.map(s=>s.date?s.date.slice(5).replace('-','/'):'?'),
-      datasets: [{ label, data: recent15.map(s=>s[metric]||null),
-        borderColor:'#2563EB', backgroundColor:'rgba(37,99,235,0.06)', borderWidth:2.5,
-        pointBackgroundColor: recent15.map(s=>valHex(metric,s[metric]||0)),
-        pointRadius:5, pointBorderColor:'#fff', pointBorderWidth:2,
-        tension:0.3, fill:true, spanGaps:true }]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          backgroundColor:'#1a2028', borderColor:'#243040', borderWidth:1,
-          titleColor:'#e8f0fe', bodyColor:'#8fa8c0', padding:10,
-          callbacks:{label:c=>`  ${label}: ${c.parsed.y?.toLocaleString()} ${n?n.unit:''}`}
-        }
-      },
-      scales:{
-        x:{ticks:{color:'#64748B',font:{size:10,weight:'500'},maxRotation:45,maxTicksLimit:8},grid:{color:'#F1F5F9'},border:{color:'#E2E8F0'}},
-        y:{ticks:{color:'#64748B',font:{size:11,weight:'600'},callback:v=>v.toLocaleString()},grid:{color:'#F1F5F9'},border:{color:'#E2E8F0'}}
-      }
+  // Remove charts for deselected metrics
+  Object.keys(trCharts).forEach(m => {
+    if (!metrics.includes(m)) {
+      trCharts[m].destroy();
+      delete trCharts[m];
+      const el = document.getElementById('tr-panel-'+m);
+      if (el) el.remove();
     }
   });
 
-  // Summary stats
-  const vals = filtered.map(s=>s[metric]||0).filter(v=>v>0);
-  const avg  = vals.length ? Math.round(vals.reduce((a,v)=>a+v,0)/vals.length) : null;
-  const peak = vals.length ? Math.round(Math.max(...vals)) : null;
-  const low  = vals.length ? Math.round(Math.min(...vals)) : null;
-  const unit = n?n.unit:'';
-  document.getElementById('trend-stats').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div style="background:var(--bg4);border:1px solid var(--bd);border-radius:10px;padding:14px">
-        <div style="font-size:9px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Average</div>
-        <div style="font-size:24px;font-weight:700;color:${avg?valHex(metric,avg):'var(--t3)'};letter-spacing:-.5px">${avg?.toLocaleString()??'—'}<span style="font-size:11px;font-weight:400;color:var(--t4);margin-left:3px">${unit}</span></div>
-      </div>
-      <div style="background:var(--bg4);border:1px solid var(--bd);border-radius:10px;padding:14px">
-        <div style="font-size:9px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Peak</div>
-        <div style="font-size:24px;font-weight:700;color:${peak?valHex(metric,peak):'var(--t3)'};letter-spacing:-.5px">${peak?.toLocaleString()??'—'}<span style="font-size:11px;font-weight:400;color:var(--t4);margin-left:3px">${unit}</span></div>
-      </div>
-      <div style="background:var(--bg4);border:1px solid var(--bd);border-radius:10px;padding:14px">
-        <div style="font-size:9px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Lowest</div>
-        <div style="font-size:24px;font-weight:700;color:var(--t2);letter-spacing:-.5px">${low?.toLocaleString()??'—'}<span style="font-size:11px;font-weight:400;color:var(--t4);margin-left:3px">${unit}</span></div>
-      </div>
-      <div style="background:var(--bg4);border:1px solid var(--bd);border-radius:10px;padding:14px">
-        <div style="font-size:9px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Sessions</div>
-        <div style="font-size:24px;font-weight:700;color:var(--cy);letter-spacing:-.5px">${filtered.length}</div>
-      </div>
-    </div>
-    ${n?`<div style="font-size:11px;color:var(--t3);padding:11px 13px;background:var(--cy-bg);border-radius:9px;border-left:3px solid var(--cy);line-height:1.65"><strong style="color:var(--cy)">What's normal?</strong><br>${n.desc}</div>`:''}`;
+  metrics.forEach(metric => {
+    const n = NORMS[metric];
+    const label = TR_LABELS[metric] || metric;
+    const color = TR_COLORS[metric] || '#2563EB';
+    const vals = filtered.map(s => s[metric] ?? null);
+    const unit = n ? n.unit : '';
+
+    // Stats
+    const nonNull = vals.filter(v => v !== null);
+    const avg  = nonNull.length ? Math.round(nonNull.reduce((a,v)=>a+v,0)/nonNull.length) : null;
+    const peak = nonNull.length ? Math.round(Math.max(...nonNull)) : null;
+    const low  = nonNull.length ? Math.round(Math.min(...nonNull)) : null;
+
+    // Create panel if it doesn't exist
+    if (!document.getElementById('tr-panel-'+metric)) {
+      const panel = document.createElement('div');
+      panel.id = 'tr-panel-'+metric;
+      panel.className = 'panel';
+      panel.innerHTML = `
+        <div class="ph">
+          <i class="ti ti-chart-line" style="color:${color}"></i>
+          <span style="color:${color}">${label}</span>
+          <div class="ph-r" style="gap:10px">
+            <span style="font-size:11px;font-weight:600;color:var(--t3)" id="tr-stat-sessions-${metric}"></span>
+            <span style="font-size:11px;font-weight:700" id="tr-stat-avg-${metric}"></span>
+            <span style="font-size:11px;font-weight:700;color:var(--gn)" id="tr-stat-peak-${metric}"></span>
+            <span style="font-size:11px;font-weight:700;color:var(--t3)" id="tr-stat-low-${metric}"></span>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="tr-canvas-${metric}"></canvas></div>`;
+      container.appendChild(panel);
+    }
+
+    // Update stats
+    document.getElementById('tr-stat-sessions-'+metric).textContent = `${filtered.length} sessions`;
+    document.getElementById('tr-stat-avg-'+metric).textContent  = avg  !== null ? `Avg ${avg.toLocaleString()} ${unit}`  : '';
+    document.getElementById('tr-stat-peak-'+metric).textContent = peak !== null ? `Peak ${peak.toLocaleString()} ${unit}` : '';
+    document.getElementById('tr-stat-low-'+metric).textContent  = low  !== null ? `Low ${low.toLocaleString()} ${unit}`  : '';
+
+    // Build datasets
+    const datasets = [{
+      label,
+      data: vals,
+      borderColor: color,
+      backgroundColor: color + '12',
+      borderWidth: 2.5,
+      pointBackgroundColor: vals.map(v => v !== null ? valHex(metric, v) : '#94A3B8'),
+      pointRadius: vals.length > 40 ? 2 : 4,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 1.5,
+      tension: 0.35,
+      fill: true,
+      spanGaps: true
+    }];
+    if (n) {
+      datasets.push({ label:`Min target (${n.ok.toLocaleString()} ${unit})`, data: filtered.map(()=>n.ok), borderColor:'#16A34A', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false });
+      datasets.push({ label:`Max target (${n.high.toLocaleString()} ${unit})`, data: filtered.map(()=>n.high), borderColor:'#D97706', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false });
+    }
+
+    const opts = {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ display: !!n, labels:{ color:'#475569', font:{size:10,weight:'600'}, boxWidth:16, padding:12 } },
+        tooltip:{
+          backgroundColor:'#0F172A', borderColor:'#1E293B', borderWidth:1,
+          titleColor:'#F8FAFC', bodyColor:'#94A3B8', padding:10, cornerRadius:8,
+          callbacks:{ label: c => c.datasetIndex===0
+            ? `  ${label}: ${c.parsed.y !== null ? c.parsed.y.toLocaleString()+' '+unit : '—'}`
+            : `  ${c.dataset.label}` }
+        }
+      },
+      scales:{
+        x:{ ticks:{color:'#64748B',font:{size:10,weight:'500'},maxRotation:45,maxTicksLimit:14}, grid:{color:'#F1F5F9'}, border:{color:'#E2E8F0'} },
+        y:{ ticks:{color:'#64748B',font:{size:11,weight:'600'},callback:v=>v.toLocaleString()}, grid:{color:'#F1F5F9'}, border:{color:'#E2E8F0'} }
+      }
+    };
+
+    if (trCharts[metric]) {
+      trCharts[metric].data.labels = labels;
+      trCharts[metric].data.datasets = datasets;
+      trCharts[metric].update();
+    } else {
+      trCharts[metric] = new Chart(document.getElementById('tr-canvas-'+metric).getContext('2d'), { type:'line', data:{ labels, datasets }, options:opts });
+    }
+  });
 }
 
 // ============================================================
