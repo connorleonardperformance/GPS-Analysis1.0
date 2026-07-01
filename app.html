@@ -1626,11 +1626,19 @@ async function doAnalyse() {
     const d = await res.json();
     const raw = d.content?.map(c => c.text || '').join('') || '';
 
-    // strip markdown code fences if present
-    const jsonStr = raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
-    let parsed;
-    try { parsed = JSON.parse(jsonStr); } catch(e) {
-      document.getElementById('ai-out').textContent = 'Could not parse response. Raw output:\n\n' + raw;
+    // Extract JSON from anywhere in the response
+    let parsed = null;
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try { parsed = JSON.parse(jsonMatch[0]); } catch(e) { parsed = null; }
+    }
+
+    if (!parsed) {
+      // Fallback: show raw text and try old regex extraction
+      document.getElementById('squad-import-panel').style.display = 'none';
+      document.getElementById('single-report-panel').style.display = 'block';
+      document.getElementById('ai-out').textContent = raw;
+      parseExtracted(raw);
       btn.disabled = false; btn.innerHTML = '<i class="ti ti-brain"></i> Extract from screenshot';
       return;
     }
