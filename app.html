@@ -743,8 +743,9 @@ async function loadData() {
       sb.from('players').select('*').eq('user_id', currentUser.id).order('created_at'),
       sb.from('sessions').select('*').eq('user_id', currentUser.id).order('date', { ascending: false })
     ]);
-    if (pe) console.error('Players load error:', pe);
+    if (pe) { console.error('Players load error:', pe); document.title = 'ERR:'+pe.message; }
     if (se) console.error('Sessions load error:', se);
+    console.log('Loaded players:', players?.length, 'user:', currentUser?.id);
 
     PLAYERS = (players || []).map((p, i) => ({
       ...p,
