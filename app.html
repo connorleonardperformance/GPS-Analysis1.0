@@ -1637,34 +1637,30 @@ async function doAnalyse() {
     }
     const raw = d.content?.map(c => c.text || '').join('') || '';
 
-    // Extract JSON from anywhere in the response
+    // Try to find JSON — look for array of players first, then object
     let parsed = null;
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try { parsed = JSON.parse(jsonMatch[0]); } catch(e) { parsed = null; }
+    // Try all JSON-like substrings from longest to shortest
+    const jsonCandidates = [...raw.matchAll(/(\{[\s\S]*?\}|\[[\s\S]*?\])/g)].map(m => m[0]);
+    // Try the full raw first (stripped of markdown), then candidates
+    const attempts = [raw.replace(/```json|```/gi,'').trim(), ...jsonCandidates];
+    for (const attempt of attempts) {
+      try { parsed = JSON.parse(attempt); break; } catch(e) {}
     }
 
-    if (!parsed) {
-      // Fallback: show raw text and try old regex extraction
-      document.getElementById('squad-import-panel').style.display = 'none';
-      document.getElementById('single-report-panel').style.display = 'block';
-      document.getElementById('ai-out').textContent = raw;
-      parseExtracted(raw);
-      btn.disabled = false; btn.innerHTML = '<i class="ti ti-brain"></i> Extract from screenshot';
-      return;
-    }
+    // Show raw output always so coach can see what Claude said
+    document.getElementById('single-report-panel').style.display = 'block';
+    document.getElementById('ai-out').textContent = raw;
 
-    if (parsed.type === 'squad') {
+    if (parsed && (parsed.players?.length || parsed.type === 'squad')) {
       renderSquadPreview(parsed);
       document.getElementById('squad-import-panel').style.display = 'block';
-      document.getElementById('single-report-panel').style.display = 'none';
-    } else {
-      // Single player — populate manual fields and show report
-      document.getElementById('squad-import-panel').style.display = 'none';
-      document.getElementById('single-report-panel').style.display = 'block';
+    } else if (parsed && parsed.type === 'single') {
       const fields = ['td','hsr','spr','hmld','acc','dec','spd','pl','dur','rpe'];
       fields.forEach(k => { const el = document.getElementById('ex-'+k); if (el && parsed[k] != null) el.value = parsed[k]; });
-      document.getElementById('ai-out').textContent = parsed.report || 'No report generated.';
+      document.getElementById('ai-out').textContent = parsed.report || raw;
+    } else {
+      // No JSON found — try old regex extraction as last resort
+      parseExtracted(raw);
     }
   } catch (e) { document.getElementById('ai-out').textContent = 'Error: ' + e.message; }
   btn.disabled = false; btn.innerHTML = '<i class="ti ti-brain"></i> Extract from screenshot';
