@@ -1394,6 +1394,53 @@ function loadTrends() {
 // ============================================================
 // SESSION AVERAGES
 // ============================================================
+
+// Calculate MD label from actual match dates rather than stored type field.
+// Returns e.g. "MD+2 / MD-5", "MD+1", "Match", "MD-3"
+function getMDLabel(dateStr, allSessions) {
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  const matchDates = allSessions
+    .filter(s => s.date && s.type && s.type.toLowerCase().includes('match'))
+    .map(s => { const m = new Date(s.date); m.setHours(0,0,0,0); return m; });
+
+  if (!matchDates.length) return null;
+
+  // Is this session itself a match?
+  if (matchDates.some(m => m.getTime() === d.getTime())) return 'Match';
+
+  const prev = matchDates.filter(m => m < d).sort((a,b) => b-a)[0];
+  const next = matchDates.filter(m => m > d).sort((a,b) => a-b)[0];
+
+  const plus  = prev ? Math.round((d - prev) / 864e5) : null;
+  const minus = next ? Math.round((next - d) / 864e5) : null;
+
+  if (plus !== null && minus !== null) return `MD+${plus} / MD-${minus}`;
+  if (plus  !== null) return `MD+${plus}`;
+  if (minus !== null) return `MD-${minus}`;
+  return null;
+}
+
+function mdLabelColor(label) {
+  if (!label) return 'var(--t2)';
+  if (label === 'Match') return 'var(--rd)';
+  // extract the MD-X part (use the before-match figure if dual label)
+  const m = label.match(/MD-(\d+)/);
+  if (m) {
+    const n = parseInt(m[1]);
+    if (n === 1) return 'var(--am)';
+    if (n <= 3) return 'var(--cy)';
+    return 'var(--t3)';
+  }
+  const p = label.match(/MD\+(\d+)/);
+  if (p) {
+    const n = parseInt(p[1]);
+    if (n === 1) return 'var(--am)';
+    if (n <= 3) return 'var(--cy)';
+    return 'var(--t3)';
+  }
+  return 'var(--t2)';
+}
+
 function loadAvgs() {
   const id = document.getElementById('av-sel').value;
   const p = PLAYERS.find(x => x.id == id);
@@ -1414,9 +1461,11 @@ function loadAvgs() {
     const dSS = ss.filter(s => s.date === dStr); const nD = dSS.length;
     if (!nD) continue;
     const dayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
-    const sessionTypes = [...new Set(dSS.map(s => s.type).filter(Boolean))];
-    const typeColors = { 'Match':'var(--rd)', 'MD-1':'var(--am)', 'MD+1':'var(--am)', 'MD-2':'var(--cy)', 'MD+2':'var(--cy)', 'MD-3':'var(--gn)', 'MD-4':'var(--gn)', 'MD-5':'var(--t3)', 'MD-6':'var(--t3)' };
-    const typePills = sessionTypes.map(t => `<span style="font-size:10px;font-weight:600;color:${typeColors[t]||'var(--t2)'};background:${typeColors[t]||'var(--t2)'}18;border-radius:5px;padding:2px 7px">${t}</span>`).join(' ');
+    const mdLabel = getMDLabel(dStr, ss);
+    const mdColor = mdLabelColor(mdLabel);
+    const typePills = mdLabel
+      ? `<span style="font-size:10px;font-weight:600;color:${mdColor};background:${mdColor}18;border-radius:5px;padding:2px 7px">${mdLabel}</span>`
+      : '—';
     const avgF = k => nD ? Math.round(dSS.reduce((a, s) => a + (s[k] || 0), 0) / nD) : null;
     const tdV = avgF('td'), hsrV = avgF('hsr'), hmldV = avgF('hmld'), accV = avgF('acc'), decV = avgF('dec'), rpeV = avgF('rpe');
     const tdLoad = nD ? dSS.reduce((a, s) => a + (s.td || 0), 0) : null;
